@@ -17,15 +17,15 @@ class _MenuState extends State<Menu> {
     {'title': 'Ver asistencia', 'icon': Icons.list_alt, 'route': 'attendance'},
   ];
 
-
   @override
   Widget build(BuildContext context) {
     Size size = MediaQuery.of(context).size;
-/*    var authProvider = Provider.of<AuthProvider>(context);
+    var authProvider = Provider.of<AuthProvider>(context);
     var user = authProvider.user;
     List<String> firstName = user!.nombres.split(" ");
     List<String> lastName = user!.apellidos.split(" ");
-    String titleName = "${firstName[0]} ${lastName[0]}";*/
+    String titleName = "${firstName[0]} ${lastName[0]}";
+
     return PopScope(
       canPop: false,
       child: Scaffold(
@@ -37,8 +37,7 @@ class _MenuState extends State<Menu> {
                 SizedBox(height: size.height * 0.05),
                 Center(
                   child: Text(
-                    //titleName,
-                    'ERICK OSOY',
+                    titleName,
                     style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                   ),
                 ),
@@ -61,6 +60,7 @@ class _MenuState extends State<Menu> {
                       delay: const Duration(seconds: 0),
                       isLeft: isLeft,
                       child: GestureDetector(
+                        onTap: () => Navigator.pushNamed(context, item['route']),
                         child: Container(
                           decoration: BoxDecoration(
                             color: Colors.black, // Fondo negro
@@ -82,7 +82,7 @@ class _MenuState extends State<Menu> {
                       ),
                     );
                   },
-                )
+                ),
               ],
             ),
           ),

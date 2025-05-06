@@ -34,6 +34,4 @@ class LoginController {
       return {'success': false, 'message': 'Error de conexión: $e'};
     }
   }
-
-
 }
