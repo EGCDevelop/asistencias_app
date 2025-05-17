@@ -12,8 +12,9 @@ class Menu extends StatefulWidget {
 
 class _MenuState extends State<Menu> {
   final List<Map<String, dynamic>> menuItems = [
-    {'title': 'Tomar asistencia', 'icon': Icons.qr_code, 'route': 'scanner', 'hero': 'scanner'},
-    {'title': 'Ver asistencia', 'icon': Icons.list_alt, 'route': 'attendance', 'hero': 2},
+    {'title': 'Tomar asistencia', 'icon': Icons.qr_code, 'route': 'scanner_event', 'delay': 0 },
+    {'title': 'Ver asistencia', 'icon': Icons.list_alt, 'route': 'attendance', 'delay': 0},
+    {'title': 'Eventos', 'icon': Icons.calendar_month, 'route': 'event', 'delay': 200 },
   ];
 
   @override
@@ -56,7 +57,7 @@ class _MenuState extends State<Menu> {
                   bool isLeft = index % 2 == 0 ? true : false;
                   return AnimationGenerator(
                     duration: const Duration(seconds: 1),
-                    delay: const Duration(seconds: 0),
+                    delay: Duration(milliseconds: item['delay']),
                     isLeft: isLeft,
                     child: GestureDetector(
                       onTap: () => Navigator.pushNamed(context, item['route']),

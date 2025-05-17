@@ -1,5 +1,6 @@
 import 'package:asistencias_egc/provider/AuthProvider.dart';
 import 'package:asistencias_egc/utils/api/scanner_controller.dart';
+import 'package:asistencias_egc/widgets/LoadingAnimation.dart';
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:provider/provider.dart';
@@ -12,11 +13,24 @@ class Scanner extends StatefulWidget {
 }
 
 class _ScannerState extends State<Scanner> {
-  //MobileScannerController cameraController = MobileScannerController();
   MobileScannerController cameraController = MobileScannerController(
     detectionSpeed: DetectionSpeed.noDuplicates, // Evita múltiples detecciones
   );
   bool _screenOpened = false;
+  int? eventId;
+  bool isLoading = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    final args = ModalRoute.of(context)!.settings.arguments;
+    if (args is int) {
+      eventId = args;
+      print(
+          "Evento recibido en Scanner: $eventId"); // Verificar que se recibe correctamente
+    }
+  }
 
   @override
   void initState() {
@@ -32,31 +46,83 @@ class _ScannerState extends State<Scanner> {
 
   void _showSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), ),
-      snackBarAnimationStyle: AnimationStyle(
-        duration: const Duration(milliseconds: 300), // Duración de la animación
-      )
-    );
+        SnackBar(
+          content: Text(message),
+        ),
+        snackBarAnimationStyle: AnimationStyle(
+          duration:
+              const Duration(milliseconds: 300), // Duración de la animación
+        ));
   }
 
-  void _foundBarcode(BarcodeCapture capture, int escuadraComandante, int puestoComandante, String token) async {
+  void _foundBarcode(BarcodeCapture capture, int escuadraComandante,
+      int puestoComandante, String token, int id) async {
     if (!_screenOpened) {
       final Barcode? barcode = capture.barcodes.firstOrNull;
       final String code = barcode?.rawValue ?? '----';
+      if (barcode == null ||
+          barcode.rawValue == null ||
+          int.tryParse(code) == null) {
+        _showSnackBar('Código inválido');
+      } else {
+        setState(() {
+          isLoading = true;
+        });
+        _screenOpened = true;
+
+        final result = await ScannerController.registerAttendance(
+            id: code,
+            escuadra: escuadraComandante.toString(),
+            puesto: puestoComandante.toString(),
+            token: token,
+            eventId: eventId.toString(),
+            idRegistro: id.toString());
+        _showSnackBar(result['message']);
+
+        // Reiniciar la cámara para permitir nueva lectura
+        _screenOpened = false;
+        setState(() {
+          isLoading = false;
+        });
+        await Future.delayed(const Duration(milliseconds: 500)); // Pequeña pausa
+        cameraController.start(); // Reactivar la cámara
+      }
+    }
+  }
+
+  void _foundBarcode2(BarcodeCapture capture, int escuadraComandante,
+      int puestoComandante, String token, int id) async {
+    if (!_screenOpened) {
+      final Barcode? barcode = capture.barcodes.firstOrNull;
+      final String code = barcode?.rawValue ?? '----';
+
       if (barcode == null || barcode.rawValue == null || int.tryParse(code) == null) {
         _showSnackBar('Código inválido');
       } else {
+        setState(() {
+          isLoading = true;
+        });
         _screenOpened = true;
-        cameraController.stop(); // Detener la cámara antes de navegar
 
         final result = await ScannerController.registerAttendance(
           id: code,
           escuadra: escuadraComandante.toString(),
           puesto: puestoComandante.toString(),
-          token: token
+          token: token,
+          eventId: eventId.toString(),
+          idRegistro: id.toString(),
         );
+
         _showSnackBar(result['message']);
-        Navigator.popAndPushNamed(context, "menu", arguments: code);
+
+        // Reiniciar la cámara para permitir nueva lectura
+        _screenOpened = false;
+        setState(() {
+          isLoading = false;
+        });
+
+        await Future.delayed(const Duration(milliseconds: 500)); // Pequeña pausa
+        cameraController.start(); // Reactivar la cámara
       }
     }
   }
@@ -77,12 +143,8 @@ class _ScannerState extends State<Scanner> {
           children: <Widget>[
             MobileScanner(
               controller: cameraController,
-              onDetect: (barcodes) => _foundBarcode(
-                barcodes,
-                user!.escuadraId,
-                user.puestoId,
-                user.token
-              ),
+              onDetect: (barcodes) => _foundBarcode2(barcodes, user!.escuadraId,
+                  user.puestoId, user.token, user.idIntegrante),
             ),
             Positioned(
               top: size.height * 0.25,
@@ -94,10 +156,7 @@ class _ScannerState extends State<Scanner> {
                     height: 200,
                     padding: const EdgeInsets.all(80),
                     decoration: BoxDecoration(
-                      border: Border.all(
-                          color: Colors.red,
-                          width: 3
-                      ),
+                      border: Border.all(color: Colors.red, width: 3),
                       borderRadius: BorderRadius.circular(5.0),
                     ),
                   ),
@@ -144,6 +203,7 @@ class _ScannerState extends State<Scanner> {
                 ],
               ),
             ),
+            if (isLoading) LoadingAnimation(),
           ],
         ),
       ),

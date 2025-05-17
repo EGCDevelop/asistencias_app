@@ -1,7 +1,9 @@
 import 'package:asistencias_egc/models/Asistencia.dart';
 import 'package:asistencias_egc/models/escuadras.dart';
+import 'package:asistencias_egc/models/event.dart';
 import 'package:asistencias_egc/provider/AuthProvider.dart';
 import 'package:asistencias_egc/utils/api/attendance_controller.dart';
+import 'package:asistencias_egc/utils/api/event_controller.dart';
 import 'package:asistencias_egc/utils/api/general_methods_controllers.dart';
 import 'package:asistencias_egc/widgets/LoadingAnimation.dart';
 import 'package:flutter/material.dart';
@@ -19,6 +21,8 @@ class _AttendanceState extends State<Attendance> {
   List<Escuadras> escuadras = [];
   List<Asistencia> asistencias = [];
   Escuadras? selectedEscuadra;
+  List<Event> events = [];
+  Event? selectedEvent;
   bool _isLoading = false;
   DateTime selectedDate = DateTime.now();
 
@@ -26,6 +30,7 @@ class _AttendanceState extends State<Attendance> {
   void initState() {
     super.initState();
     _loadSquads();
+    _getEvents();
   }
 
   Future<void> _loadSquads() async {
@@ -48,14 +53,56 @@ class _AttendanceState extends State<Attendance> {
     }
   }
 
+  Future<void> _getEvents() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    String formattedDate = DateFormat('yyyy-MM-dd').format(selectedDate);
+    var authProvider = Provider.of<AuthProvider>(context, listen: false);
+    int userEscuadraId =
+        selectedEscuadra?.escIdEscuadra ?? authProvider.user!.escuadraId;
+    List<Event> dataList =
+        await EventController.getEventsByFilters(userEscuadraId, formattedDate);
+
+    setState(() {
+      events = dataList;
+      selectedEvent = (events.length > 1)
+          ? events[1]
+          : events.isNotEmpty
+              ? events.first
+              : null;
+      _isLoading = false;
+    });
+
+    if (events.isEmpty) {
+      setState(() {
+        asistencias.clear(); // Limpiar la lista si no hay eventos disponibles
+      });
+    } else if (selectedEvent != null) {
+      _loadAsistencia(); // Ejecutar carga de asistencia si hay eventos
+    }
+  }
+
   Future<void> _loadAsistencia() async {
-    if (selectedEscuadra == null) return;
+    //if (selectedEscuadra == null) return;
+    if (selectedEscuadra == null || events.isEmpty) {
+      setState(() {
+        asistencias.clear(); // Limpiar la lista si no hay eventos
+      });
+      return;
+    }
 
     setState(() => _isLoading = true);
 
+    var authProvider = Provider.of<AuthProvider>(context, listen: false);
     String formattedDate = DateFormat('yyyy-MM-dd').format(selectedDate);
+    int eventId = selectedEvent?.eveId ?? 0;
+    int userEscuadraId =
+        selectedEscuadra?.escIdEscuadra ?? authProvider.user!.escuadraId;
+
     asistencias = await AttendanceController.getAsistencia(
-        selectedEscuadra!.escIdEscuadra, formattedDate);
+        userEscuadraId, formattedDate, eventId);
 
     setState(() => _isLoading = false);
   }
@@ -87,7 +134,7 @@ class _AttendanceState extends State<Attendance> {
 
     if (picked != null && picked != selectedDate) {
       setState(() => selectedDate = picked);
-      _loadAsistencia();
+      _getEvents();
     }
   }
 
@@ -103,54 +150,97 @@ class _AttendanceState extends State<Attendance> {
           canPop: true,
           child: Scaffold(
             appBar: AppBar(title: const Text("Asistencia")),
-            body: Hero(
-              tag: 2,
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  children: <Widget>[
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: <Widget>[
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.black, // Fondo negro
-                            shape: RoundedRectangleBorder(
-                              borderRadius:
-                                  BorderRadius.circular(5), // Bordes redondeados
-                            ),
-                          ),
-                          onPressed: () => _selectDate(context),
-                          child: Text(
-                            "Fecha: ${DateFormat('dd/MM/yyyy').format(selectedDate)}",
-                            style: const TextStyle(
-                                color: Colors.white), // Letras en blanco
-                          ),
+            body: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                children: <Widget>[
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.black, // Fondo negro
+                        shape: RoundedRectangleBorder(
+                          borderRadius:
+                              BorderRadius.circular(5), // Bordes redondeados
                         ),
-                        //SizedBox(width: size.width * 0.1,),
-                        Container(
-                          decoration: BoxDecoration(
-                            color: Colors.black, // Fondo negro
-                            borderRadius:
-                                BorderRadius.circular(5), // Bordes redondeados
-                          ),
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                      ),
+                      onPressed: () => _selectDate(context),
+                      child: Text(
+                        "Fecha: ${DateFormat('dd/MM/yyyy').format(selectedDate)}",
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(
+                    height: 10,
+                  ),
+                  Container(
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: Colors.black,
+                      borderRadius: BorderRadius.circular(5),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Row(
+                      children: [
+                        Expanded(
                           child: DropdownButton<Escuadras>(
+                            isExpanded: true,
                             value: selectedEscuadra,
-                            onChanged: (position != 1 ||
-                                    position != 2 ||
-                                    position != 3 ||
-                                    position != 4)
-                                ? null
-                                : (Escuadras? newValue) {
-                                    setState(() => selectedEscuadra = newValue);
-                                    _loadAsistencia();
-                                  },
+                            onChanged: (position < 5)
+                                ? (Escuadras? newValue) {
+                                    setState(() {
+                                      selectedEscuadra = newValue;
+                                    });
+                                    _getEvents(); // Volver a cargar los eventos cuando cambie la escuadra
+                                  }
+                                : null,
                             items: escuadras.map((escuadra) {
                               return DropdownMenuItem<Escuadras>(
                                 value: escuadra,
+                                child: Align(
+                                  alignment: Alignment.centerLeft,
+                                  child: Text(
+                                    escuadra.escNombre,
+                                    style: const TextStyle(color: Colors.white),
+                                  ),
+                                ),
+                              );
+                            }).toList(),
+                            style: const TextStyle(color: Colors.white),
+                            dropdownColor: Colors.black,
+                            underline: Container(),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(
+                    height: 10,
+                  ),
+                  Container(
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: Colors.black,
+                      borderRadius: BorderRadius.circular(5),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: DropdownButton<Event>(
+                            value: selectedEvent,
+                            onChanged: (Event? newValue) {
+                              setState(() {
+                                selectedEvent = newValue;
+                              });
+                              _loadAsistencia(); // Llamar a función tras selección
+                            },
+                            items: events.map((event) {
+                              return DropdownMenuItem<Event>(
+                                value: event,
                                 child: Text(
-                                  escuadra.escNombre,
+                                  event.eveTitulo,
                                   style: const TextStyle(color: Colors.white),
                                 ),
                               );
@@ -162,30 +252,30 @@ class _AttendanceState extends State<Attendance> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 20),
-                    SizedBox(
-                      width: size.width,
-                      child: Text('Total: ${asistencias.length}',
-                          style: const TextStyle(fontWeight: FontWeight.bold)),
-                    ),
-                    SizedBox(
-                      width: size.width,
-                      child: Text(
-                          'Asistencia: ${asistencias.where((a) => a.asistencia == 1).length}',
-                          style: const TextStyle(
-                              fontWeight: FontWeight.bold, color: Colors.green)),
-                    ),
-                    SizedBox(
-                      width: size.width,
-                      child: Text(
-                          'Faltantes: ${asistencias.where((a) => a.asistencia == 0).length}',
-                          style: const TextStyle(
-                              fontWeight: FontWeight.bold, color: Colors.red)),
-                    ),
-                    const SizedBox(height: 20),
-                    attendanceTable(asistencias),
-                  ],
-                ),
+                  ),
+                  const SizedBox(height: 20),
+                  SizedBox(
+                    width: size.width,
+                    child: Text('Total: ${asistencias.length}',
+                        style: const TextStyle(fontWeight: FontWeight.bold)),
+                  ),
+                  SizedBox(
+                    width: size.width,
+                    child: Text(
+                        'Asistencia: ${asistencias.where((a) => a.asistencia == 1).length}',
+                        style: const TextStyle(
+                            fontWeight: FontWeight.bold, color: Colors.green)),
+                  ),
+                  SizedBox(
+                    width: size.width,
+                    child: Text(
+                        'Faltantes: ${asistencias.where((a) => a.asistencia == 0).length}',
+                        style: const TextStyle(
+                            fontWeight: FontWeight.bold, color: Colors.red)),
+                  ),
+                  const SizedBox(height: 20),
+                  attendanceTable(asistencias),
+                ],
               ),
             ),
           ),
@@ -206,7 +296,7 @@ Widget attendanceTable(List<Asistencia> attendance) {
         child: DataTable(
           columnSpacing: 30, // Más espacio entre columnas
           headingRowColor:
-              MaterialStateProperty.resolveWith((states) => Colors.black),
+              WidgetStateProperty.resolveWith((states) => Colors.black),
           columns: const [
             DataColumn(
               label: Text(

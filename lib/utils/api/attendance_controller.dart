@@ -5,9 +5,11 @@ import 'package:asistencias_egc/utils/api/Environments.dart';
 import 'package:http/http.dart' as http;
 
 class AttendanceController {
-  static Future<List<Asistencia>> getAsistencia(int idEscuadra, String date) async {
+  static Future<List<Asistencia>> getAsistencia(
+      int idEscuadra, String date, int eventId) async {
     String apiUrl = Environments.apiUrl;
-    final Uri url = Uri.parse('$apiUrl/Asistencia/get_asistencia?idEscuadra=$idEscuadra&date=$date');
+    final Uri url = Uri.parse(
+        '$apiUrl/Asistencia/get_asistencia?idEscuadra=$idEscuadra&date=$date&eventId=$eventId');
 
     try {
       final response = await http.get(
@@ -32,5 +34,4 @@ class AttendanceController {
       return [];
     }
   }
-
 }

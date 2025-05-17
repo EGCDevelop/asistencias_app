@@ -1,7 +1,10 @@
 import 'package:asistencias_egc/pages/auth/login.dart';
+import 'package:asistencias_egc/pages/events/event_form.dart';
+import 'package:asistencias_egc/pages/events/events.dart';
 import 'package:asistencias_egc/pages/public/attendance.dart';
 import 'package:asistencias_egc/pages/public/menu.dart';
 import 'package:asistencias_egc/pages/scanner/Scanner.dart';
+import 'package:asistencias_egc/pages/scanner/scanner_event.dart';
 import 'package:asistencias_egc/provider/AuthProvider.dart';
 import 'package:asistencias_egc/utils/api/Environments.dart';
 import 'package:flutter/material.dart';
@@ -47,7 +50,10 @@ class MyApp extends StatelessWidget {
         'login': (context) => const Login(),
         'menu' : (context) => const Menu(),
         'scanner' : (context) => const Scanner(),
+        'scanner_event': (context) => const ScannerEvent(),
         'attendance': (context) => const Attendance(),
+        'event': (context) => const Events(),
+        'event_form': (context) => const EventForm()
       },
     );
   }

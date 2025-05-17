@@ -9,7 +9,9 @@ class ScannerController {
     required String id,
     required String escuadra,
     required String puesto,
-    required String token
+    required String token,
+    required String eventId,
+    required String idRegistro,
   }) async {
     String apiUrl = Environments.apiUrl;
 
@@ -19,6 +21,8 @@ class ScannerController {
       'id': id,
       'escuadra': escuadra,
       'puesto': puesto,
+      'eventId': eventId,
+      'idRegistro' : idRegistro
     };
 
     try {
