@@ -15,6 +15,7 @@ class _MenuState extends State<Menu> {
     {'title': 'Tomar asistencia', 'icon': Icons.qr_code, 'route': 'scanner_event', 'delay': 0 },
     {'title': 'Ver asistencia', 'icon': Icons.list_alt, 'route': 'attendance', 'delay': 0},
     {'title': 'Eventos', 'icon': Icons.calendar_month, 'route': 'event', 'delay': 200 },
+    {'title': 'Integrantes', 'icon': Icons.person, 'route': 'members', 'delay': 200 },
   ];
 
   @override

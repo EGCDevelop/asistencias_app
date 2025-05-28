@@ -1,6 +1,8 @@
 import 'package:asistencias_egc/pages/auth/login.dart';
 import 'package:asistencias_egc/pages/events/event_form.dart';
 import 'package:asistencias_egc/pages/events/events.dart';
+import 'package:asistencias_egc/pages/members/member_edit.dart';
+import 'package:asistencias_egc/pages/members/members.dart';
 import 'package:asistencias_egc/pages/public/attendance.dart';
 import 'package:asistencias_egc/pages/public/menu.dart';
 import 'package:asistencias_egc/pages/scanner/Scanner.dart';
@@ -53,7 +55,9 @@ class MyApp extends StatelessWidget {
         'scanner_event': (context) => const ScannerEvent(),
         'attendance': (context) => const Attendance(),
         'event': (context) => const Events(),
-        'event_form': (context) => const EventForm()
+        'event_form': (context) => const EventForm(),
+        'members': (context) => const Members(),
+        'member_edit': (context) => const MemberEdit()
       },
     );
   }
