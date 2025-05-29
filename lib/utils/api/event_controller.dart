@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:asistencias_egc/models/escuadras.dart';
 import 'package:asistencias_egc/models/event.dart';
 import 'package:asistencias_egc/utils/api/Environments.dart';
 import 'package:http/http.dart' as http;
@@ -103,7 +104,8 @@ class EventController {
         if (data['ok'] == true) {
           return true;
         } else {
-          throw Exception("Error en la respuesta del servidor: ${data['message']}");
+          throw Exception(
+              "Error en la respuesta del servidor: ${data['message']}");
         }
       } else {
         throw Exception("Error en la petición: ${response.statusCode}");
@@ -117,18 +119,18 @@ class EventController {
   static Future<List<Event>> getEventsBySquad(int idEscuadra) async {
     String apiUrl = Environments.apiUrl;
     final Uri url =
-    Uri.parse('$apiUrl/Event/get_events_by_squad?idEscuadra=$idEscuadra');
+        Uri.parse('$apiUrl/Event/get_events_by_squad?idEscuadra=$idEscuadra');
 
     try {
       final response =
-      await http.get(url, headers: {'Content-Type': 'application/json'});
+          await http.get(url, headers: {'Content-Type': 'application/json'});
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
 
         if (data['ok'] == true) {
           List<Event> events =
-          (data['list'] as List).map((e) => Event.fromJson(e)).toList();
+              (data['list'] as List).map((e) => Event.fromJson(e)).toList();
           return events;
         } else {
           throw Exception(
@@ -143,21 +145,22 @@ class EventController {
     }
   }
 
-  static Future<List<Event>> getEventsByFilters(int idEscuadra, String date) async {
+  static Future<List<Event>> getEventsByFilters(
+      int idEscuadra, String date) async {
     String apiUrl = Environments.apiUrl;
-    final Uri url =
-    Uri.parse('$apiUrl/Event/get_events_by_filters?idEscuadra=$idEscuadra&date=$date');
+    final Uri url = Uri.parse(
+        '$apiUrl/Event/get_events_by_filters?idEscuadra=$idEscuadra&date=$date');
 
     try {
       final response =
-      await http.get(url, headers: {'Content-Type': 'application/json'});
+          await http.get(url, headers: {'Content-Type': 'application/json'});
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
 
         if (data['ok'] == true) {
           List<Event> events =
-          (data['list'] as List).map((e) => Event.fromJson(e)).toList();
+              (data['list'] as List).map((e) => Event.fromJson(e)).toList();
           return events;
         } else {
           throw Exception(
@@ -172,5 +175,33 @@ class EventController {
     }
   }
 
+  static Future<List<Escuadras>> getSquadByEventId(int id) async {
+    String apiUrl = Environments.apiUrl;
 
+    final Uri url = Uri.parse('$apiUrl/Event/get_squad_by_event_id?id=$id');
+
+    try {
+      final response = await http.get(
+        url,
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+
+        if (data['ok'] == true) {
+          return (data['list'] as List)
+              .map((item) => Escuadras.fromJson(item))
+              .toList();
+        } else {
+          throw Exception("La respuesta no es válida");
+        }
+      } else {
+        throw Exception("Error en la petición: ${response.statusCode}");
+      }
+    } catch (e) {
+      print('Error de conexión: $e');
+      return [];
+    }
+  }
 }

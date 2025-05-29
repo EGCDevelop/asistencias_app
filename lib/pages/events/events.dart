@@ -1,10 +1,12 @@
 import 'package:asistencias_egc/models/event.dart';
 import 'package:asistencias_egc/provider/AuthProvider.dart';
 import 'package:asistencias_egc/utils/api/event_controller.dart';
+import 'package:asistencias_egc/utils/utils.dart';
 import 'package:asistencias_egc/widgets/LoadingAnimation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:table_calendar/table_calendar.dart';
+import 'package:intl/intl.dart';
 
 class Events extends StatefulWidget {
   const Events({super.key});
@@ -193,8 +195,8 @@ class _EventsState extends State<Events> {
             children: [
               Text(
                 "Eventos del ${selectedDate.day}/${selectedDate.month}/${selectedDate.year}",
-                style:
-                    const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                    fontSize: 20, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 10),
               events.isNotEmpty
@@ -202,40 +204,70 @@ class _EventsState extends State<Events> {
                       shrinkWrap: true,
                       itemCount: events.length,
                       itemBuilder: (context, index) {
-                        return ListTile(
-                          title: Text(
-                            events[index].eveTitulo,
-                            style: const TextStyle(fontSize: 16),
-                          ),
-                          leading: const Icon(Icons.event, color: Colors.black),
-                          subtitle: Text(
-                            events[index].eveDescripcion,
-                            style: const TextStyle(fontSize: 14),
-                          ),
-                          trailing: IconButton(
-                            icon: const Icon(Icons.delete, color: Colors.red),
-                            onPressed: () async {
-                              bool success = await EventController.deleteEvent(
-                                  idEvent: events[index].eveId);
+                        return GestureDetector(
+                          onTap: () {
+                            Navigator.pushNamed(context, 'event_form', arguments: events[index]);
+                          },
+                          child: ListTile(
+                            title: Text(
+                              events[index].eveTitulo,
+                              style: const TextStyle(fontSize: 16),
+                            ),
+                            leading:
+                                const Icon(Icons.event, color: Colors.black),
+                            subtitle: Column(
+                              children: <Widget>[
+                                SizedBox(
+                                  width: double.infinity,
+                                  child: Text(
+                                    events[index].eveDescripcion,
+                                    style: const TextStyle(fontSize: 14),
+                                  ),
+                                ),
+                                SizedBox(
+                                  width: double.infinity,
+                                  child: Text(
+                                    'Cmte : ${events[index].eveHoraEntradaComandantes}',
+                                    style: const TextStyle(fontSize: 14),
+                                  ),
+                                ),
+                                SizedBox(
+                                  width: double.infinity,
+                                  child: Text(
+                                    'Int : ${events[index].eveHoraEntradaIntegrantes}',
+                                    style: const TextStyle(fontSize: 14),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            trailing: IconButton(
+                              icon: const Icon(Icons.delete, color: Colors.red),
+                              onPressed: () async {
+                                bool success =
+                                    await EventController.deleteEvent(
+                                        idEvent: events[index].eveId);
 
-                              if(success){
-                                Navigator.pop(context); // Cerrar el modal
-                                _getEvents(); // Refrescar el calendario
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text("Evento eliminado exitosamente"),
-                                    backgroundColor: Colors.green,
-                                  ),
-                                );
-                              } else {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text("Error al eliminar el evento"),
-                                    backgroundColor: Colors.red,
-                                  ),
-                                );
-                              }
-                            }, // Sin acción por ahora
+                                if (success) {
+                                  Navigator.pop(context); // Cerrar el modal
+                                  _getEvents(); // Refrescar el calendario
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content:
+                                          Text("Evento eliminado exitosamente"),
+                                      backgroundColor: Colors.green,
+                                    ),
+                                  );
+                                } else {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content:
+                                          Text("Error al eliminar el evento"),
+                                      backgroundColor: Colors.red,
+                                    ),
+                                  );
+                                }
+                              }, // Sin acción por ahora
+                            ),
                           ),
                         );
                       },
