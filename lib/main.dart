@@ -1,3 +1,4 @@
+import 'package:asistencias_egc/pages/attendanceChar/attendance_char.dart';
 import 'package:asistencias_egc/pages/auth/login.dart';
 import 'package:asistencias_egc/pages/events/event_form.dart';
 import 'package:asistencias_egc/pages/events/events.dart';
@@ -57,7 +58,8 @@ class MyApp extends StatelessWidget {
         'event': (context) => const Events(),
         'event_form': (context) => const EventForm(),
         'members': (context) => const Members(),
-        'member_edit': (context) => const MemberEdit()
+        'member_edit': (context) => const MemberEdit(),
+        'attendance_char': (context) => const AttendanceChar(),
       },
     );
   }

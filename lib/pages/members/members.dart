@@ -68,8 +68,13 @@ class _MembersState extends State<Members> {
     setState(() {
       escuadras = squads;
       establecimientos = establishments;
-      selectedEscuadra = escuadras
-          .firstWhere((escuadra) => escuadra.escIdEscuadra == userEscuadraId);
+      if(userEscuadraId == 11) {
+        selectedEscuadra = escuadras
+            .firstWhere((escuadra) => escuadra.escIdEscuadra == 1);
+      } else {
+        selectedEscuadra = escuadras
+            .firstWhere((escuadra) => escuadra.escIdEscuadra == userEscuadraId);
+      }
       selectedEstablecimiento = establishments
           .first; // Establecer "Todos" como seleccionado por defecto
       _isLoading = false;
@@ -87,8 +92,10 @@ class _MembersState extends State<Members> {
     String searchQuery = searchController.text.trim().isNotEmpty
         ? searchController.text.trim()
         : "%";
-
-    int escuadraId = userEscuadraId;
+    
+    int escuadraId = (userEscuadraId == 11)
+        ? selectedEscuadra?.escIdEscuadra ?? 1
+        : userEscuadraId;
     int establecimientoId = selectedEstablecimiento?.estIdEstablecimiento ?? 0;
     int estado = selectedState;
     int esNuevo = selectedNews;
