@@ -1,6 +1,7 @@
 import 'package:asistencias_egc/provider/AuthProvider.dart';
 import 'package:asistencias_egc/utils/api/scanner_controller.dart';
 import 'package:asistencias_egc/widgets/LoadingAnimation.dart';
+import 'package:asistencias_egc/widgets/animation/CustomSnackBar.dart';
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:provider/provider.dart';
@@ -55,41 +56,6 @@ class _ScannerState extends State<Scanner> {
         ));
   }
 
-  void _foundBarcode(BarcodeCapture capture, int escuadraComandante,
-      int puestoComandante, String token, int id) async {
-    if (!_screenOpened) {
-      final Barcode? barcode = capture.barcodes.firstOrNull;
-      final String code = barcode?.rawValue ?? '----';
-      if (barcode == null ||
-          barcode.rawValue == null ||
-          int.tryParse(code) == null) {
-        _showSnackBar('Código inválido');
-      } else {
-        setState(() {
-          isLoading = true;
-        });
-        _screenOpened = true;
-
-        final result = await ScannerController.registerAttendance(
-            id: code,
-            escuadra: escuadraComandante.toString(),
-            puesto: puestoComandante.toString(),
-            token: token,
-            eventId: eventId.toString(),
-            idRegistro: id.toString());
-        _showSnackBar(result['message']);
-
-        // Reiniciar la cámara para permitir nueva lectura
-        _screenOpened = false;
-        setState(() {
-          isLoading = false;
-        });
-        await Future.delayed(const Duration(milliseconds: 500)); // Pequeña pausa
-        cameraController.start(); // Reactivar la cámara
-      }
-    }
-  }
-
   void _foundBarcode2(BarcodeCapture capture, int escuadraComandante,
       int puestoComandante, String token, int id) async {
     if (!_screenOpened) {
@@ -97,7 +63,13 @@ class _ScannerState extends State<Scanner> {
       final String code = barcode?.rawValue ?? '----';
 
       if (barcode == null || barcode.rawValue == null || int.tryParse(code) == null) {
-        _showSnackBar('Código inválido');
+        //_showSnackBar('Código inválido');
+
+        CustomSnackBar.show(
+          context,
+          success: false,
+          message: "Código inválido.",
+        );
       } else {
         setState(() {
           isLoading = true;
@@ -113,7 +85,13 @@ class _ScannerState extends State<Scanner> {
           idRegistro: id.toString(),
         );
 
-        _showSnackBar(result['message']);
+        //_showSnackBar(result['message']);
+
+        CustomSnackBar.show(
+          context,
+          success: true,
+          message: result['message'],
+        );
 
         // Reiniciar la cámara para permitir nueva lectura
         _screenOpened = false;

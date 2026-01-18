@@ -14,6 +14,7 @@ class _LoadingAnimationState extends State<LoadingAnimation>
   late Animation<double> _animation1;
   late Animation<double> _animation2;
   late Animation<double> _animation3;
+  bool _isDisposed = false;
 
   @override
   void initState() {
@@ -44,13 +45,22 @@ class _LoadingAnimationState extends State<LoadingAnimation>
   }
 
   void _startAnimations() {
-    _controller1.repeat(reverse: true);
+    if (!_isDisposed) _controller1.repeat(reverse: true);
     Future.delayed(const Duration(milliseconds: 200), () {
-      _controller2.repeat(reverse: true);
+      if (!_isDisposed) _controller2.repeat(reverse: true);
     });
     Future.delayed(const Duration(milliseconds: 400), () {
-      _controller3.repeat(reverse: true);
+      if (!_isDisposed) _controller3.repeat(reverse: true);
     });
+  }
+
+  @override
+  void dispose() {
+    _isDisposed = true;
+    _controller1.dispose();
+    _controller2.dispose();
+    _controller3.dispose();
+    super.dispose();
   }
 
   @override
@@ -89,13 +99,5 @@ class _LoadingAnimationState extends State<LoadingAnimation>
         ),
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    _controller1.dispose();
-    _controller2.dispose();
-    _controller3.dispose();
-    super.dispose();
   }
 }

@@ -6,6 +6,7 @@ import 'package:asistencias_egc/utils/api/general_methods_controllers.dart';
 import 'package:asistencias_egc/widgets/CustomTextField.dart';
 import 'package:asistencias_egc/widgets/LoadingAnimation.dart';
 import 'package:asistencias_egc/widgets/animation/CustomDatePicker.dart';
+import 'package:asistencias_egc/widgets/animation/CustomSnackBar.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -42,7 +43,6 @@ class _EventFormState extends State<EventForm> {
   void initState() {
     super.initState();
     _loadSquads();
-    //_loadAquads();
   }
 
   Future<void> _loadSquads() async {
@@ -176,16 +176,24 @@ class _EventFormState extends State<EventForm> {
         _isLoading = false;
       });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(success
-              ? "Evento creado exitosamente"
-              : "Error al crear el evento"),
-          backgroundColor: success ? Colors.green : Colors.red,
-        ),
+      // ScaffoldMessenger.of(context).showSnackBar(
+      //   SnackBar(
+      //     content: Text(success
+      //         ? "Evento creado exitosamente"
+      //         : "Error al crear el evento"),
+      //     backgroundColor: success ? Colors.green : Colors.red,
+      //   ),
+      // );
+
+      CustomSnackBar.show(
+        context,
+        success: success,
+        message: success
+            ? "El evento fue creado exitosamente."
+            : "Ocurrió un error al crear el evento.",
       );
 
-      // Si la respuesta es correcta, regresar a la pantalla anterior
+      //Si la respuesta es correcta, regresar a la pantalla anterior
       if (success) {
         Future.delayed(const Duration(milliseconds: 100), () {
           // Espera breve para ver el mensaje

@@ -22,6 +22,10 @@ class AttendanceChar extends StatefulWidget {
 }
 
 class _AttendanceCharState extends State<AttendanceChar> {
+  Color greenColor = const Color(0xFF006414);
+  Color redColor = const Color(0xFFD31900);
+  Color blueColor = const Color(0xFF1465bb);
+
   List<AttendanceChartDTO> chartData = [];
   List<Escuadras> escuadras = [];
   List<Asistencia> asistencias = [];
@@ -177,110 +181,115 @@ class _AttendanceCharState extends State<AttendanceChar> {
             appBar: AppBar(title: const Text("Gráficas")),
             body: Padding(
               padding: const EdgeInsets.all(16.0),
-              child: Column(
-                children: <Widget>[
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.black, // Fondo negro
-                        shape: RoundedRectangleBorder(
-                          borderRadius:
-                              BorderRadius.circular(5), // Bordes redondeados
-                        ),
-                      ),
-                      onPressed: () => _selectDate(context),
-                      child: Text(
-                        "Fecha: ${DateFormat('dd/MM/yyyy').format(selectedDate)}",
-                        style: const TextStyle(color: Colors.white),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(
-                    height: 10,
-                  ),
-                  Container(
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      color: Colors.black,
-                      borderRadius: BorderRadius.circular(5),
-                    ),
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: DropdownButton<Event>(
-                            value: selectedEvent,
-                            onChanged: (Event? newValue) {
-                              setState(() {
-                                selectedEvent = newValue;
-                              });
-                              _loadAsistencia(); // Llamar a función tras selección
-                            },
-                            items: events.map((event) {
-                              return DropdownMenuItem<Event>(
-                                value: event,
-                                child: Text(
-                                  event.eveTitulo,
-                                  style: const TextStyle(color: Colors.white),
-                                ),
-                              );
-                            }).toList(),
-                            style: const TextStyle(color: Colors.white),
-                            dropdownColor: Colors.black,
-                            underline: Container(),
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                child: Column(
+                  children: <Widget>[
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.black, // Fondo negro
+                          shape: RoundedRectangleBorder(
+                            borderRadius:
+                                BorderRadius.circular(5), // Bordes redondeados
                           ),
                         ),
-                      ],
+                        onPressed: () => _selectDate(context),
+                        child: Text(
+                          "Fecha: ${DateFormat('dd/MM/yyyy').format(selectedDate)}",
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                      ),
                     ),
-                  ),
-                  const SizedBox(
-                    height: 10,
-                  ),
-                  Container(
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      color: Colors.black,
-                      borderRadius: BorderRadius.circular(5),
+                    const SizedBox(
+                      height: 10,
                     ),
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: DropdownButton<Escuadras>(
-                            isExpanded: true,
-                            value: selectedEscuadra,
-                            onChanged: (position < 5)
-                                ? (Escuadras? newValue) {
-                                    setState(() {
-                                      selectedEscuadra = newValue;
-                                    });
-                                    _getEvents(); // Volver a cargar los eventos cuando cambie la escuadra
-                                  }
-                                : null,
-                            items: escuadras.map((escuadra) {
-                              return DropdownMenuItem<Escuadras>(
-                                value: escuadra,
-                                child: Align(
-                                  alignment: Alignment.centerLeft,
+                    Container(
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: Colors.black,
+                        borderRadius: BorderRadius.circular(5),
+                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: DropdownButton<Event>(
+                              value: selectedEvent,
+                              onChanged: (Event? newValue) {
+                                setState(() {
+                                  selectedEvent = newValue;
+                                });
+                                _loadAsistencia(); // Llamar a función tras selección
+                              },
+                              items: events.map((event) {
+                                return DropdownMenuItem<Event>(
+                                  value: event,
                                   child: Text(
-                                    escuadra.escNombre,
+                                    event.eveTitulo,
                                     style: const TextStyle(color: Colors.white),
                                   ),
-                                ),
-                              );
-                            }).toList(),
-                            style: const TextStyle(color: Colors.white),
-                            dropdownColor: Colors.black,
-                            underline: Container(),
+                                );
+                              }).toList(),
+                              style: const TextStyle(color: Colors.white),
+                              dropdownColor: Colors.black,
+                              underline: Container(),
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 20),
-                  buildPieChart()
-                ],
+                    const SizedBox(
+                      height: 10,
+                    ),
+                    Container(
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: Colors.black,
+                        borderRadius: BorderRadius.circular(5),
+                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: DropdownButton<Escuadras>(
+                              isExpanded: true,
+                              value: selectedEscuadra,
+                              onChanged: (position < 5)
+                                  ? (Escuadras? newValue) {
+                                      setState(() {
+                                        selectedEscuadra = newValue;
+                                      });
+                                      _getEvents(); // Volver a cargar los eventos cuando cambie la escuadra
+                                    }
+                                  : null,
+                              items: escuadras.map((escuadra) {
+                                return DropdownMenuItem<Escuadras>(
+                                  value: escuadra,
+                                  child: Align(
+                                    alignment: Alignment.centerLeft,
+                                    child: Text(
+                                      escuadra.escNombre,
+                                      style:
+                                          const TextStyle(color: Colors.white),
+                                    ),
+                                  ),
+                                );
+                              }).toList(),
+                              style: const TextStyle(color: Colors.white),
+                              dropdownColor: Colors.black,
+                              underline: Container(),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    buildPieChart(),
+                    buildProgressBarRows()
+                  ],
+                ),
               ),
             ),
           ),
@@ -291,10 +300,6 @@ class _AttendanceCharState extends State<AttendanceChar> {
   }
 
   Widget buildPieChart() {
-    const greenColor = Color(0xFF006414);
-    const redColor = Color(0xFFD31900);
-    const blueColor = Color(0xFF1465bb);
-
     // Calcular totales desde los datos
     int totalAsistencias =
         chartData.fold(0, (sum, item) => sum + item.asistencias);
@@ -462,6 +467,146 @@ class _AttendanceCharState extends State<AttendanceChar> {
               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget buildProgressBarRows() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.symmetric(vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.15),
+            spreadRadius: 2,
+            blurRadius: 6,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(
+            width: double.infinity,
+            child: Text(
+              "Resumen",
+              style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,),
+              textAlign: TextAlign.center,
+            ),
+          ),
+          const SizedBox(height: 16),
+          ...chartData.map((item) {
+            double asistenciaPct = item.totalIntegrantes > 0
+                ? item.asistencias / item.totalIntegrantes
+                : 0;
+            double faltaPct = item.totalIntegrantes > 0
+                ? item.faltan / item.totalIntegrantes
+                : 0;
+            double completado = asistenciaPct * 100;
+
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Nombre escuadra
+                Text(
+                  item.escNombre,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 4),
+
+                // Chips A y F
+                Row(
+                  children: [
+                    _infoChip("A: ${item.asistencias}", greenColor),
+                    const SizedBox(width: 6),
+                    _infoChip("F: ${item.faltan}", redColor),
+                  ],
+                ),
+                const SizedBox(height: 8),
+
+                // Barra proporcional + porcentaje
+                Row(
+                  children: [
+                    Expanded(
+                      child: Row(
+                        children: [
+                          Expanded(
+                            flex: (asistenciaPct * 100).round(),
+                            child: Container(
+                              height: 16,
+                              decoration: BoxDecoration(
+                                color: greenColor,
+                                borderRadius: const BorderRadius.only(
+                                  topLeft: Radius.circular(4),
+                                  bottomLeft: Radius.circular(4),
+                                ),
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            flex: (faltaPct * 100).round(),
+                            child: Container(
+                              height: 16,
+                              decoration: BoxDecoration(
+                                color: redColor,
+                                borderRadius: const BorderRadius.only(
+                                  topRight: Radius.circular(4),
+                                  bottomRight: Radius.circular(4),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 4, horizontal: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade200,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        "${completado.toStringAsFixed(0)}%",
+                        style: const TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 12),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+              ],
+            );
+          }).toList(),
+        ],
+      ),
+    );
+  }
+
+  Widget _infoChip(String text, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 6),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          color: color,
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
         ),
       ),
     );

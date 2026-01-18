@@ -300,6 +300,13 @@ Widget attendanceTable(List<Asistencia> attendance) {
           columns: const [
             DataColumn(
               label: Text(
+                "Asistencia",
+                style:
+                    TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              ),
+            ),
+            DataColumn(
+              label: Text(
                 "Nombre",
                 style:
                     TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
@@ -319,24 +326,9 @@ Widget attendanceTable(List<Asistencia> attendance) {
                     TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
               ),
             ),
-            DataColumn(
-              label: Text(
-                "Asistencia",
-                style:
-                    TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-              ),
-            ),
           ],
           rows: attendance.map((asistencia) {
             return DataRow(cells: [
-              DataCell(Text(asistencia.intNombres)),
-              DataCell(Text(asistencia.intApellidos)),
-              DataCell(Text(
-                asistencia.asiFechaAsistencia != null
-                    ? DateFormat('dd-MM-yyyy hh:mm')
-                        .format(DateTime.parse(asistencia.asiFechaAsistencia!))
-                    : "--/--/----", // Si es null, espacio en blanco
-              )),
               DataCell(
                 Center(
                   child: Icon(
@@ -348,6 +340,14 @@ Widget attendanceTable(List<Asistencia> attendance) {
                   ),
                 ),
               ),
+              DataCell(Text(asistencia.intNombres)),
+              DataCell(Text(asistencia.intApellidos)),
+              DataCell(Text(
+                asistencia.asiFechaAsistencia != null
+                    ? DateFormat('dd-MM-yyyy hh:mm')
+                        .format(DateTime.parse(asistencia.asiFechaAsistencia!))
+                    : "--/--/----", // Si es null, espacio en blanco
+              )),
             ]);
           }).toList(),
         ),

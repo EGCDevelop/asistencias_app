@@ -3,6 +3,7 @@ import 'package:asistencias_egc/provider/AuthProvider.dart';
 import 'package:asistencias_egc/utils/api/event_controller.dart';
 import 'package:asistencias_egc/utils/utils.dart';
 import 'package:asistencias_egc/widgets/LoadingAnimation.dart';
+import 'package:asistencias_egc/widgets/animation/CustomSnackBar.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:table_calendar/table_calendar.dart';
@@ -249,22 +250,36 @@ class _EventsState extends State<Events> {
 
                                 if (success) {
                                   Navigator.pop(context); // Cerrar el modal
-                                  _getEvents(); // Refrescar el calendario
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content:
-                                          Text("Evento eliminado exitosamente"),
-                                      backgroundColor: Colors.green,
-                                    ),
+                                  _getEvents();
+                                  CustomSnackBar.show(
+                                    context,
+                                    success: success,
+                                    message: success
+                                        ? "Evento eliminado exitosamente."
+                                        : " ",
                                   );
+                                  // ScaffoldMessenger.of(context).showSnackBar(
+                                  //   const SnackBar(
+                                  //     content:
+                                  //         Text("Evento eliminado exitosamente"),
+                                  //     backgroundColor: Colors.green,
+                                  //   ),
+                                  // );
                                 } else {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content:
-                                          Text("Error al eliminar el evento"),
-                                      backgroundColor: Colors.red,
-                                    ),
+                                  CustomSnackBar.show(
+                                    context,
+                                    success: success,
+                                    message: success
+                                        ? "Error al eliminar el evento"
+                                        : "Error al eliminar el evento",
                                   );
+                                  // ScaffoldMessenger.of(context).showSnackBar(
+                                  //   const SnackBar(
+                                  //     content:
+                                  //         Text("Error al eliminar el evento"),
+                                  //     backgroundColor: Colors.red,
+                                  //   ),
+                                  // );
                                 }
                               }, // Sin acción por ahora
                             ),

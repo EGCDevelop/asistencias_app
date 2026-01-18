@@ -20,6 +20,22 @@ class EventController {
     final Uri url =
         Uri.parse('$apiUrl/Event/create_event'); // Endpoint del servidor
 
+    print('enviando');
+    print('-----------------------------');
+    print('title = $title');
+    print('description = $description');
+    print('userCreate = $userCreate');
+    print('eventDate = $eventDate');
+    print('commandersEntry = $commandersEntry');
+    print('membersEntry = $membersEntry');
+    print('onlyCommanders = $onlyCommanders');
+    print('squads = $squads');
+    print('generalBand = $generalBand');
+
+    if(onlyCommanders == 1){
+      membersEntry = commandersEntry;
+    }
+
     // Estructura del JSON a enviar
     Map<String, dynamic> body = {
       "title": title,
@@ -44,7 +60,6 @@ class EventController {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         if (data['ok'] == true) {
-          print(' Evento creado exitosamente: ${data['message']}');
           return true;
         } else {
           throw Exception(

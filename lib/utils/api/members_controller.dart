@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:asistencias_egc/models/integrantes.dart';
 import 'package:asistencias_egc/utils/api/Environments.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart' as http;
 
 class MembersController {
@@ -19,9 +20,12 @@ class MembersController {
         url,
         headers: {'Content-Type': 'application/json'},
       );
-
       if (response.statusCode == 200) {
+        debugPrint("4");
+
         final data = jsonDecode(response.body);
+
+        debugPrint("data = $data");
 
         if (data['ok'] == true) {
           return (data['list'] as List)
