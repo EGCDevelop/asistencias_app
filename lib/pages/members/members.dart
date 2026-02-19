@@ -4,6 +4,7 @@ import 'package:asistencias_egc/models/integrantes.dart';
 import 'package:asistencias_egc/provider/AuthProvider.dart';
 import 'package:asistencias_egc/utils/api/general_methods_controllers.dart';
 import 'package:asistencias_egc/utils/api/members_controller.dart';
+import 'package:asistencias_egc/widgets/CustomAppBar.dart';
 import 'package:asistencias_egc/widgets/LoadingAnimation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -55,7 +56,7 @@ class _MembersState extends State<Members> {
 
     List<Escuadras> squads = await GeneralMethodsControllers.GetSquads();
     var authProvider = Provider.of<AuthProvider>(context, listen: false);
-    int userEscuadraId = authProvider.user!.escuadraId; // Obtener el escuadraId
+    int userEscuadraId = authProvider.user!.escuadraId;
 
     List<Establishment> establishments =
         await GeneralMethodsControllers.getEstablishment();
@@ -66,19 +67,35 @@ class _MembersState extends State<Members> {
             estNombreEstablecimiento: "Todos", estIdEstablecimiento: 0));
 
     setState(() {
-      escuadras = squads;
-      establecimientos = establishments;
-      if(userEscuadraId == 11) {
-        selectedEscuadra = escuadras
-            .firstWhere((escuadra) => escuadra.escIdEscuadra == 1);
+      if (userEscuadraId == 1 || userEscuadraId == 12) {
+        escuadras = squads.where((e) => e.escIdEscuadra == userEscuadraId || e.escIdEscuadra == 14).toList();
+      } else if (userEscuadraId == 2 || userEscuadraId == 13) {
+        escuadras = squads.where((e) => e.escIdEscuadra == userEscuadraId || e.escIdEscuadra == 15).toList();
+      } else if (userEscuadraId == 11) {
+        escuadras = squads;
       } else {
-        selectedEscuadra = escuadras
-            .firstWhere((escuadra) => escuadra.escIdEscuadra == userEscuadraId);
+        escuadras = squads.where((e) => e.escIdEscuadra == userEscuadraId).toList();
       }
+
+      if (userEscuadraId == 11) {
+        selectedEscuadra = escuadras.firstWhere(
+              (e) => e.escIdEscuadra == 1,
+          orElse: () => escuadras.first,
+        );
+      } else {
+        selectedEscuadra = escuadras.firstWhere(
+              (e) => e.escIdEscuadra == userEscuadraId,
+          orElse: () => escuadras.first,
+        );
+      }
+
+      establecimientos = establishments;
       selectedEstablecimiento = establishments
-          .first; // Establecer "Todos" como seleccionado por defecto
+          .first;
       _isLoading = false;
     });
+
+    _getData();
   }
 
   void _getData() async {
@@ -86,21 +103,16 @@ class _MembersState extends State<Members> {
       _isLoading = true;
     });
 
-    var authProvider = Provider.of<AuthProvider>(context, listen: false);
-    int userEscuadraId = authProvider.user!.escuadraId;
-
     String searchQuery = searchController.text.trim().isNotEmpty
         ? searchController.text.trim()
         : "%";
-    
-    int escuadraId = (userEscuadraId == 11)
-        ? selectedEscuadra?.escIdEscuadra ?? 1
-        : userEscuadraId;
+
+    int escuadraId = selectedEscuadra?.escIdEscuadra ?? 1;
     int establecimientoId = selectedEstablecimiento?.estIdEstablecimiento ?? 0;
     int estado = selectedState;
     int esNuevo = selectedNews;
 
-    List<Integrantes> integrantes = await MembersController.GetMemberLike(
+    List<Integrantes> integrantes = await MembersController.getMemberLike(
       like: searchQuery,
       squadId: escuadraId,
       schoolId: establecimientoId,
@@ -109,6 +121,7 @@ class _MembersState extends State<Members> {
     );
 
     setState(() {
+      debugPrint("integrantes == ${integrantes.length}");
       _isLoading = false;
       generalData = integrantes;
     });
@@ -116,15 +129,12 @@ class _MembersState extends State<Members> {
 
   @override
   Widget build(BuildContext context) {
-    var authProvider = Provider.of<AuthProvider>(context);
-    int position = authProvider.user!.puestoId;
-
     return Stack(
       children: [
         PopScope(
-          canPop: true,
+          canPop: false,
           child: Scaffold(
-            appBar: AppBar(title: const Text("Integrantes")),
+            appBar: const CustomAppBar(title: 'Integrantes'),
             body: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -171,14 +181,12 @@ class _MembersState extends State<Members> {
                               child: DropdownButton<Escuadras>(
                                 isExpanded: true,
                                 value: selectedEscuadra,
-                                onChanged: (position < 5)
-                                    ? (Escuadras? newValue) {
-                                        setState(() {
-                                          selectedEscuadra = newValue;
-                                        });
-                                        _getData();
-                                      }
-                                    : null,
+                                onChanged: (Escuadras? newValue) {
+                                  setState(() {
+                                    selectedEscuadra = newValue;
+                                  });
+                                  _getData();
+                                },
                                 items: escuadras.map((escuadra) {
                                   return DropdownMenuItem<Escuadras>(
                                     value: escuadra,

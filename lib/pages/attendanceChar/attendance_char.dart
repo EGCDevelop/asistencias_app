@@ -7,12 +7,12 @@ import 'package:asistencias_egc/utils/api/attendance_char_controller.dart';
 import 'package:asistencias_egc/utils/api/attendance_controller.dart';
 import 'package:asistencias_egc/utils/api/event_controller.dart';
 import 'package:asistencias_egc/utils/api/general_methods_controllers.dart';
+import 'package:asistencias_egc/widgets/CustomAppBar.dart';
 import 'package:asistencias_egc/widgets/LoadingAnimation.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-//import 'package:fl_chart/fl_chart.dart';
 
 class AttendanceChar extends StatefulWidget {
   const AttendanceChar({super.key});
@@ -45,6 +45,8 @@ class _AttendanceCharState extends State<AttendanceChar> {
     setState(() {
       _isLoading = true;
     });
+
+    // 1. Cargamos las escuadras primero
     List<Escuadras> squads = await GeneralMethodsControllers.GetSquads();
     squads.insert(
       0,
@@ -53,17 +55,13 @@ class _AttendanceCharState extends State<AttendanceChar> {
         escNombre: 'Todas',
       ),
     );
-
     setState(() {
       escuadras = squads;
-      selectedEscuadra = escuadras.first; // Seleccionar "Todas" por defecto
-      _isLoading = false;
+      selectedEscuadra = escuadras.first;
     });
 
-    if (selectedEscuadra != null) {
-      _loadAsistencia();
-      _getEvents();
-    }
+    // 2. IMPORTANTE: Esperamos a que los eventos terminen de cargar antes de quitar el loading
+    await _getEvents();
   }
 
   Future<void> _getEvents() async {
@@ -73,41 +71,50 @@ class _AttendanceCharState extends State<AttendanceChar> {
 
     String formattedDate = DateFormat('yyyy-MM-dd').format(selectedDate);
     var authProvider = Provider.of<AuthProvider>(context, listen: false);
-    int userEscuadraId =
-        selectedEscuadra?.escIdEscuadra ?? authProvider.user!.escuadraId;
 
-    // TODO: SE DEBE CAMBIAR LA ESCUADRA PARA QUE APAREZCAN TODOS LOS EVENTOS SOLO POR FECHA Y/O escuadra
-    List<Event> dataList =
-        await EventController.getEventsByFilters(1, formattedDate);
+    // Determinamos el ID de búsqueda inicial
+    int userEscuadraId = selectedEscuadra?.escIdEscuadra ?? authProvider.user!.escuadraId;
+    userEscuadraId = userEscuadraId == 0 ? authProvider.user!.escuadraId : userEscuadraId;
+
+    List<Event> dataList = await EventController.getEventsByFilters(userEscuadraId, formattedDate);
 
     setState(() {
       events = dataList;
-      selectedEvent = (events.length > 1)
-          ? events[1]
-          : events.isNotEmpty
-              ? events.first
-              : null;
+      if (events.isNotEmpty) {
+        // Si ya tenemos un evento seleccionado, intentamos mantener la versión "completa"
+        // que ya teníamos para no perder el listado de escuadras original.
+        bool sigueExistiendo = events.any((e) => e.eveId == selectedEvent?.eveId);
+
+        if (selectedEvent == null || !sigueExistiendo) {
+          selectedEvent = (events.length > 1) ? events[1] : events.first;
+        }
+
+        // Sincronizar escuadra solo si es necesario [cite: 18]
+        if (selectedEvent?.eveBandaGeneral == 0) {
+          List<int> ids = selectedEvent!.idsEscuadras;
+          if (!ids.contains(selectedEscuadra?.escIdEscuadra)) {
+            selectedEscuadra = escuadras.firstWhere(
+                  (esc) => ids.contains(esc.escIdEscuadra),
+              orElse: () => escuadras.first,
+            );
+          }
+        }
+      } else {
+        selectedEvent = null;
+        asistencias.clear();
+      }
       _isLoading = false;
     });
 
-    if (events.isEmpty) {
-      setState(() {
-        asistencias.clear(); // Limpiar la lista si no hay eventos disponibles
-      });
-    } else if (selectedEvent != null) {
-      _loadAsistencia(); // Ejecutar carga de asistencia si hay eventos
+    // 3. Cargamos los datos finales de la gráfica y asistencia
+    if (selectedEvent != null) {
+      _loadAsistencia();
 
-      List<AttendanceChartDTO> data =
-          await AttendanceCharController.getChartData(
+      List<AttendanceChartDTO> data = await AttendanceCharController.getChartData(
         context,
         selectedEvent!.eveId,
         selectedEscuadra?.escIdEscuadra ?? 0,
       );
-
-      for (var item in data) {
-        print(
-            '📊 Escuadra: ${item.escNombre}, Asistencias: ${item.asistencias}, Faltan: ${item.faltan}, Total: ${item.totalIntegrantes}');
-      }
 
       setState(() {
         chartData = data;
@@ -178,7 +185,7 @@ class _AttendanceCharState extends State<AttendanceChar> {
         PopScope(
           canPop: true,
           child: Scaffold(
-            appBar: AppBar(title: const Text("Gráficas")),
+            appBar: const CustomAppBar(title: 'Gráficas'),
             body: Padding(
               padding: const EdgeInsets.all(16.0),
               child: SingleChildScrollView(
@@ -215,17 +222,20 @@ class _AttendanceCharState extends State<AttendanceChar> {
                       child: Row(
                         children: [
                           Expanded(
-                            child: DropdownButton<Event>(
-                              value: selectedEvent,
-                              onChanged: (Event? newValue) {
-                                setState(() {
-                                  selectedEvent = newValue;
-                                });
-                                _loadAsistencia(); // Llamar a función tras selección
+                            child:
+                            DropdownButton<int>(
+                              value: selectedEvent?.eveId,
+                              onChanged: (int? newId) {
+                                if (newId != null) {
+                                  setState(() {
+                                    selectedEvent = events.firstWhere((e) => e.eveId == newId);
+                                  });
+                                  _loadAsistencia();
+                                }
                               },
                               items: events.map((event) {
-                                return DropdownMenuItem<Event>(
-                                  value: event,
+                                return DropdownMenuItem<int>(
+                                  value: event.eveId,
                                   child: Text(
                                     event.eveTitulo,
                                     style: const TextStyle(color: Colors.white),
@@ -240,9 +250,7 @@ class _AttendanceCharState extends State<AttendanceChar> {
                         ],
                       ),
                     ),
-                    const SizedBox(
-                      height: 10,
-                    ),
+                    const SizedBox(height: 15),
                     Container(
                       width: double.infinity,
                       decoration: BoxDecoration(
@@ -253,26 +261,39 @@ class _AttendanceCharState extends State<AttendanceChar> {
                       child: Row(
                         children: [
                           Expanded(
-                            child: DropdownButton<Escuadras>(
+                            child:
+                            DropdownButton<int>(
                               isExpanded: true,
-                              value: selectedEscuadra,
+                              value: selectedEscuadra?.escIdEscuadra,
                               onChanged: (position < 5)
-                                  ? (Escuadras? newValue) {
-                                      setState(() {
-                                        selectedEscuadra = newValue;
-                                      });
-                                      _getEvents(); // Volver a cargar los eventos cuando cambie la escuadra
-                                    }
+                                  ? (int? newId) {
+                                if (newId != null) {
+                                  setState(() {
+                                    selectedEscuadra = escuadras.firstWhere((esc) => esc.escIdEscuadra == newId);
+                                  });
+                                  _getEvents();
+                                }
+                              }
                                   : null,
-                              items: escuadras.map((escuadra) {
-                                return DropdownMenuItem<Escuadras>(
-                                  value: escuadra,
+                              // Busca el items: escuadras.where en la línea 79 de tu código
+                              items: escuadras.where((esc) {
+                                // 1. "Todas" siempre visible
+                                if (esc.escIdEscuadra == 0) return true;
+
+                                // 2. Si no hay evento o es Banda General, mostrar TODAS las escuadras cargadas
+                                // Esto evita que al filtrar por una, las demás desaparezcan
+                                if (selectedEvent == null || selectedEvent!.eveBandaGeneral == 1) return true;
+
+                                // 3. Si es restringido, mostrar solo las permitidas por el evento original
+                                return selectedEvent!.idsEscuadras.contains(esc.escIdEscuadra);
+                              }).map((escuadra) {
+                                return DropdownMenuItem<int>(
+                                  value: escuadra.escIdEscuadra,
                                   child: Align(
                                     alignment: Alignment.centerLeft,
                                     child: Text(
                                       escuadra.escNombre,
-                                      style:
-                                          const TextStyle(color: Colors.white),
+                                      style: const TextStyle(color: Colors.white),
                                     ),
                                   ),
                                 );
@@ -285,6 +306,10 @@ class _AttendanceCharState extends State<AttendanceChar> {
                         ],
                       ),
                     ),
+                    const SizedBox(
+                      height: 10,
+                    ),
+
                     const SizedBox(height: 20),
                     buildPieChart(),
                     buildProgressBarRows()

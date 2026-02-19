@@ -1,5 +1,6 @@
 import 'package:asistencias_egc/provider/AuthProvider.dart';
 import 'package:asistencias_egc/utils/api/scanner_controller.dart';
+import 'package:asistencias_egc/widgets/CustomAppBar.dart';
 import 'package:asistencias_egc/widgets/LoadingAnimation.dart';
 import 'package:asistencias_egc/widgets/animation/CustomSnackBar.dart';
 import 'package:flutter/material.dart';
@@ -43,17 +44,6 @@ class _ScannerState extends State<Scanner> {
   void dispose() {
     cameraController.dispose();
     super.dispose();
-  }
-
-  void _showSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(message),
-        ),
-        snackBarAnimationStyle: AnimationStyle(
-          duration:
-              const Duration(milliseconds: 300), // Duración de la animación
-        ));
   }
 
   void _foundBarcode2(BarcodeCapture capture, int escuadraComandante,
@@ -114,9 +104,7 @@ class _ScannerState extends State<Scanner> {
     return PopScope(
       canPop: true,
       child: Scaffold(
-        appBar: AppBar(
-          title: const Text('SCANNER'),
-        ),
+        appBar: const CustomAppBar(title: 'Scanner'),
         body: Stack(
           children: <Widget>[
             MobileScanner(

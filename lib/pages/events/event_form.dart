@@ -210,7 +210,7 @@ class _EventFormState extends State<EventForm> {
         PopScope(
           canPop: true,
           child: Scaffold(
-              appBar: AppBar(title: const Text("Formulario de Evento")),
+              appBar: AppBar(title: const Text("Formulario de Evento"), backgroundColor: Colors.white,),
               body: SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
                 child: Padding(

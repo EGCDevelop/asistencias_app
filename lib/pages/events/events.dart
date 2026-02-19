@@ -2,6 +2,7 @@ import 'package:asistencias_egc/models/event.dart';
 import 'package:asistencias_egc/provider/AuthProvider.dart';
 import 'package:asistencias_egc/utils/api/event_controller.dart';
 import 'package:asistencias_egc/utils/utils.dart';
+import 'package:asistencias_egc/widgets/CustomAppBar.dart';
 import 'package:asistencias_egc/widgets/LoadingAnimation.dart';
 import 'package:asistencias_egc/widgets/animation/CustomSnackBar.dart';
 import 'package:flutter/material.dart';
@@ -37,6 +38,7 @@ class _EventsState extends State<Events> {
 
     var authProvider = Provider.of<AuthProvider>(context, listen: false);
     int userEscuadraId = authProvider.user!.escuadraId; // Obtener el escuadraId
+
     List<Event> list = await EventController.getEvents(userEscuadraId);
 
     eventsMap = {};
@@ -72,7 +74,7 @@ class _EventsState extends State<Events> {
         PopScope(
           canPop: true,
           child: Scaffold(
-            appBar: AppBar(title: const Text("Eventos")),
+            appBar: const CustomAppBar(title: 'Eventos'),
             body: Column(
               children: [
                 Expanded(

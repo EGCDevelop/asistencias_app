@@ -5,7 +5,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart' as http;
 
 class MembersController {
-  static Future<List<Integrantes>> GetMemberLike({
+  static Future<List<Integrantes>> getMemberLike({
     required String like,
     required int squadId,
     required int schoolId,
@@ -21,11 +21,7 @@ class MembersController {
         headers: {'Content-Type': 'application/json'},
       );
       if (response.statusCode == 200) {
-        debugPrint("4");
-
         final data = jsonDecode(response.body);
-
-        debugPrint("data = $data");
 
         if (data['ok'] == true) {
           return (data['list'] as List)
@@ -38,7 +34,7 @@ class MembersController {
         throw Exception("Error en la petición: ${response.statusCode}");
       }
     } catch (e) {
-      print('Error de conexión: $e');
+      debugPrint('Error de conexión: $e');
       return [];
     }
   }
@@ -102,7 +98,7 @@ class MembersController {
         throw Exception("Error en la petición: ${response.statusCode}");
       }
     } catch (e) {
-      print('Error de conexión: $e');
+      debugPrint('Error de conexión: $e');
       return false;
     }
   }

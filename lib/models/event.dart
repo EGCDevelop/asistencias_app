@@ -11,6 +11,7 @@ class Event {
   final String? eveUsuarioModificacion;
   final String eveFechaModificacon;
   final int eveBandaGeneral;
+  final String? listadoEscuadras;
 
   Event({
     required this.eveId,
@@ -24,7 +25,8 @@ class Event {
     required this.eveFechaCreacion,
     this.eveUsuarioModificacion,
     required this.eveFechaModificacon,
-    required this.eveBandaGeneral
+    required this.eveBandaGeneral,
+    this.listadoEscuadras
   });
 
   factory Event.fromJson(Map<String, dynamic> json) {
@@ -40,8 +42,17 @@ class Event {
       eveFechaCreacion: json['eveFechaCreacion'],
       eveUsuarioModificacion: json['eveUsuarioModificacion'],
       eveFechaModificacon: json['eveFechaModificacon'],
-      eveBandaGeneral: json["eveBandaGeneral"]
+      eveBandaGeneral: json["eveBandaGeneral"],
+      listadoEscuadras: json['listadoEscuadras'],
     );
+  }
+
+  List<int> get idsEscuadras {
+    if (listadoEscuadras == null || listadoEscuadras!.isEmpty) return [];
+    return listadoEscuadras!
+        .split(',')
+        .map((s) => int.parse(s.trim()))
+        .toList();
   }
 }
 

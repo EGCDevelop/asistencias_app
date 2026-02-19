@@ -20,18 +20,6 @@ class EventController {
     final Uri url =
         Uri.parse('$apiUrl/Event/create_event'); // Endpoint del servidor
 
-    print('enviando');
-    print('-----------------------------');
-    print('title = $title');
-    print('description = $description');
-    print('userCreate = $userCreate');
-    print('eventDate = $eventDate');
-    print('commandersEntry = $commandersEntry');
-    print('membersEntry = $membersEntry');
-    print('onlyCommanders = $onlyCommanders');
-    print('squads = $squads');
-    print('generalBand = $generalBand');
-
     if(onlyCommanders == 1){
       membersEntry = commandersEntry;
     }
@@ -77,7 +65,7 @@ class EventController {
   static Future<List<Event>> getEvents(int idEscuadra) async {
     String apiUrl = Environments.apiUrl;
     final Uri url =
-        Uri.parse('$apiUrl/Event/get_events?idEscuadra=$idEscuadra');
+          Uri.parse('$apiUrl/Event/get_events?idEscuadra=$idEscuadra');
 
     try {
       final response =
@@ -135,14 +123,12 @@ class EventController {
     String apiUrl = Environments.apiUrl;
     final Uri url =
         Uri.parse('$apiUrl/Event/get_events_by_squad?idEscuadra=$idEscuadra');
-
     try {
       final response =
           await http.get(url, headers: {'Content-Type': 'application/json'});
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-
         if (data['ok'] == true) {
           List<Event> events =
               (data['list'] as List).map((e) => Event.fromJson(e)).toList();

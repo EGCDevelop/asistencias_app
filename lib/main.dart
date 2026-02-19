@@ -4,8 +4,8 @@ import 'package:asistencias_egc/pages/events/event_form.dart';
 import 'package:asistencias_egc/pages/events/events.dart';
 import 'package:asistencias_egc/pages/members/member_edit.dart';
 import 'package:asistencias_egc/pages/members/members.dart';
+import 'package:asistencias_egc/pages/public/MainDrawerController.dart';
 import 'package:asistencias_egc/pages/public/attendance.dart';
-import 'package:asistencias_egc/pages/public/menu.dart';
 import 'package:asistencias_egc/pages/scanner/Scanner.dart';
 import 'package:asistencias_egc/pages/scanner/scanner_event.dart';
 import 'package:asistencias_egc/provider/AuthProvider.dart';
@@ -43,6 +43,7 @@ class MyApp extends StatelessWidget {
       title: 'App EGC',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
+          scaffoldBackgroundColor: Colors.white,
         textSelectionTheme: const TextSelectionThemeData(
           cursorColor: Colors.black,
           selectionHandleColor: Colors.black
@@ -51,7 +52,8 @@ class MyApp extends StatelessWidget {
       initialRoute: 'login',
       routes: {
         'login': (context) => const Login(),
-        'menu' : (context) => const Menu(),
+        //'menu' : (context) => const Menu(),
+        'menu' : (context) => const MainDrawerController(),
         'scanner' : (context) => const Scanner(),
         'scanner_event': (context) => const ScannerEvent(),
         'attendance': (context) => const Attendance(),

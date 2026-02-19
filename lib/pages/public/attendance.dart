@@ -5,6 +5,7 @@ import 'package:asistencias_egc/provider/AuthProvider.dart';
 import 'package:asistencias_egc/utils/api/attendance_controller.dart';
 import 'package:asistencias_egc/utils/api/event_controller.dart';
 import 'package:asistencias_egc/utils/api/general_methods_controllers.dart';
+import 'package:asistencias_egc/widgets/CustomAppBar.dart';
 import 'package:asistencias_egc/widgets/LoadingAnimation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -42,14 +43,33 @@ class _AttendanceState extends State<Attendance> {
     int userEscuadraId = authProvider.user!.escuadraId; // Obtener el escuadraId
 
     setState(() {
-      escuadras = squads;
-      selectedEscuadra = escuadras
-          .firstWhere((escuadra) => escuadra.escIdEscuadra == userEscuadraId);
+      if (userEscuadraId == 1 || userEscuadraId == 12) {
+        escuadras = squads.where((e) => e.escIdEscuadra == userEscuadraId || e.escIdEscuadra == 14).toList();
+      } else if (userEscuadraId == 2 || userEscuadraId == 13) {
+        escuadras = squads.where((e) => e.escIdEscuadra == userEscuadraId || e.escIdEscuadra == 15).toList();
+      } else if (userEscuadraId == 11) {
+        escuadras = squads;
+      } else {
+        escuadras = squads.where((e) => e.escIdEscuadra == userEscuadraId).toList();
+      }
+
+      if (userEscuadraId == 11) {
+        selectedEscuadra = escuadras.firstWhere(
+              (e) => e.escIdEscuadra == 1,
+          orElse: () => escuadras.first,
+        );
+      } else {
+        selectedEscuadra = escuadras.firstWhere(
+              (e) => e.escIdEscuadra == userEscuadraId,
+          orElse: () => escuadras.first,
+        );
+      }
+
       _isLoading = false;
     });
 
     if (selectedEscuadra != null) {
-      _loadAsistencia();
+      _loadAttendance();
     }
   }
 
@@ -62,6 +82,7 @@ class _AttendanceState extends State<Attendance> {
     var authProvider = Provider.of<AuthProvider>(context, listen: false);
     int userEscuadraId =
         selectedEscuadra?.escIdEscuadra ?? authProvider.user!.escuadraId;
+
     List<Event> dataList =
         await EventController.getEventsByFilters(userEscuadraId, formattedDate);
 
@@ -80,12 +101,11 @@ class _AttendanceState extends State<Attendance> {
         asistencias.clear(); // Limpiar la lista si no hay eventos disponibles
       });
     } else if (selectedEvent != null) {
-      _loadAsistencia(); // Ejecutar carga de asistencia si hay eventos
+      _loadAttendance(); // Ejecutar carga de asistencia si hay eventos
     }
   }
 
-  Future<void> _loadAsistencia() async {
-    //if (selectedEscuadra == null) return;
+  Future<void> _loadAttendance() async {
     if (selectedEscuadra == null || events.isEmpty) {
       setState(() {
         asistencias.clear(); // Limpiar la lista si no hay eventos
@@ -141,15 +161,12 @@ class _AttendanceState extends State<Attendance> {
   @override
   Widget build(BuildContext context) {
     Size size = MediaQuery.of(context).size;
-    var authProvider = Provider.of<AuthProvider>(context);
-    int position = authProvider.user!.puestoId;
-
     return Stack(
       children: <Widget>[
         PopScope(
           canPop: true,
           child: Scaffold(
-            appBar: AppBar(title: const Text("Asistencia")),
+            appBar: const CustomAppBar(title: 'Asistencia'),
             body: Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
@@ -187,14 +204,12 @@ class _AttendanceState extends State<Attendance> {
                           child: DropdownButton<Escuadras>(
                             isExpanded: true,
                             value: selectedEscuadra,
-                            onChanged: (position < 5)
-                                ? (Escuadras? newValue) {
-                                    setState(() {
-                                      selectedEscuadra = newValue;
-                                    });
-                                    _getEvents(); // Volver a cargar los eventos cuando cambie la escuadra
-                                  }
-                                : null,
+                            onChanged: (Escuadras? newValue) {
+                              setState(() {
+                                selectedEscuadra = newValue;
+                              });
+                              _getEvents();
+                            },
                             items: escuadras.map((escuadra) {
                               return DropdownMenuItem<Escuadras>(
                                 value: escuadra,
@@ -234,7 +249,7 @@ class _AttendanceState extends State<Attendance> {
                               setState(() {
                                 selectedEvent = newValue;
                               });
-                              _loadAsistencia(); // Llamar a función tras selección
+                              _loadAttendance(); // Llamar a función tras selección
                             },
                             items: events.map((event) {
                               return DropdownMenuItem<Event>(

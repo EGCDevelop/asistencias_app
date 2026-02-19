@@ -1,9 +1,11 @@
 import 'package:asistencias_egc/models/event.dart';
 import 'package:asistencias_egc/provider/AuthProvider.dart';
 import 'package:asistencias_egc/utils/api/event_controller.dart';
+import 'package:asistencias_egc/widgets/CustomAppBar.dart';
 import 'package:asistencias_egc/widgets/LoadingAnimation.dart';
 import 'package:asistencias_egc/widgets/animation/FadeInUp.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 class ScannerEvent extends StatefulWidget {
@@ -24,8 +26,11 @@ class _ScannerEventState extends State<ScannerEvent> {
 
     var authProvider = Provider.of<AuthProvider>(context, listen: false);
     int userEscuadraId = authProvider.user!.escuadraId; // Obtener el escuadraId
-    List<Event> dataList =
-        await EventController.getEventsBySquad(userEscuadraId);
+    String formattedDateFrom = DateFormat('yyyy-MM-dd').format(DateTime.now());
+
+    List<Event> dataList = await EventController.getEventsByFilters(
+        userEscuadraId, formattedDateFrom);
+
     setState(() {
       _isLoading = false;
       list = dataList;
@@ -45,6 +50,7 @@ class _ScannerEventState extends State<ScannerEvent> {
         PopScope(
           canPop: true,
           child: Scaffold(
+            appBar: const CustomAppBar(title: 'Scanner'),
             body: Center(
                 child: ListView.builder(
               shrinkWrap: true,

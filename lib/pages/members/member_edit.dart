@@ -189,8 +189,7 @@ class _MemberEditState extends State<MemberEdit> {
 
       if (success) {
         Future.delayed(const Duration(milliseconds: 100), () {
-          // Espera breve para ver el mensaje
-          Navigator.pop(context, true); // Regresa a la pantalla anterior
+          Navigator.pop(context, true);
         });
       }
     }
@@ -202,7 +201,7 @@ class _MemberEditState extends State<MemberEdit> {
       children: [
         PopScope(
           child: Scaffold(
-            appBar: AppBar(title: const Text("Editar integrante")),
+            appBar: AppBar(title: const Text("Editar integrante"), backgroundColor: Colors.white),
             body: SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
               child: Padding(
@@ -285,11 +284,12 @@ class _MemberEditState extends State<MemberEdit> {
                                   child: DropdownButton<Escuadras>(
                                     isExpanded: true,
                                     value: selectedEscuadra,
-                                    onChanged: (Escuadras? newValue) {
+                                    /*onChanged: (Escuadras? newValue) {
                                       setState(() {
                                         selectedEscuadra = newValue;
                                       });
-                                    },
+                                    },*/
+                                    onChanged: null,
                                     items: escuadras.map((escuadra) {
                                       return DropdownMenuItem<Escuadras>(
                                         value: escuadra,
@@ -330,11 +330,12 @@ class _MemberEditState extends State<MemberEdit> {
                                   child: DropdownButton<Position>(
                                     isExpanded: true,
                                     value: selectedPosition,
-                                    onChanged: (Position? newValue) {
+                                    /*onChanged: (Position? newValue) {
                                       setState(() {
                                         selectedPosition = newValue;
                                       });
-                                    },
+                                    },*/
+                                    onChanged: null,
                                     items: positions.map((position) {
                                       return DropdownMenuItem<Position>(
                                         value: position,
@@ -573,9 +574,10 @@ class _MemberEditState extends State<MemberEdit> {
                         },
                       ),
                       const SizedBox(
-                        height: 60,
+                        height: 30,
                       ),
-                      _titles('Otros datos'),
+                      //TODO: estara comentado hasta que se apliquen las restricciones del conocimiento del dispositivo por usuario
+                      /*_titles('Otros datos'),
                       const SizedBox(
                         height: 40,
                       ),
@@ -608,7 +610,7 @@ class _MemberEditState extends State<MemberEdit> {
                       ),
                       const SizedBox(
                         height: 20,
-                      ),
+                      ),*/
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
