@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:asistencias_egc/models/Asistencia.dart';
 import 'package:asistencias_egc/models/escuadras.dart';
 import 'package:asistencias_egc/models/event.dart';
@@ -7,6 +8,9 @@ import 'package:asistencias_egc/utils/api/event_controller.dart';
 import 'package:asistencias_egc/utils/api/general_methods_controllers.dart';
 import 'package:asistencias_egc/widgets/CustomAppBar.dart';
 import 'package:asistencias_egc/widgets/LoadingAnimation.dart';
+import 'package:asistencias_egc/widgets/animation/CustomSnackBar.dart';
+import 'package:excel/excel.dart';
+import 'package:file_saver/file_saver.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -158,6 +162,66 @@ class _AttendanceState extends State<Attendance> {
     }
   }
 
+  Future<void> attendanceExportXlsx(BuildContext context, List<Asistencia> attendance) async {
+    bool success = false;
+    try{
+      final excel = Excel.createExcel();
+      final Sheet sheet = excel["Asistencias"];
+      excel.delete('Sheet1');
+
+      var headerStyle = CellStyle(
+        bold: true,
+      );
+      sheet.cell(CellIndex.indexByString("A1")).cellStyle = headerStyle;
+
+      // agregamos los encabezados
+      sheet.appendRow([
+        TextCellValue('Nombres'),
+        TextCellValue('Apellidos'),
+        TextCellValue('Fecha'),
+        TextCellValue('Asistencia'),
+        TextCellValue('Comentario'),
+      ]);
+
+      // filas
+      for(var data in attendance){
+        sheet.appendRow([
+          TextCellValue(data.intNombres),
+          TextCellValue(data.intApellidos),
+          TextCellValue(data.asiFechaAsistencia ?? ''),
+          TextCellValue(data.asistencia == 1 ? 'Si' : 'No'),
+          TextCellValue(data.asiComentario ?? ''),
+        ]);
+      }
+
+      final fileBytes = excel.save();
+
+      if (fileBytes != null) {
+        final uint8List = Uint8List.fromList(fileBytes);
+
+        final result = await FileSaver.instance.saveAs(
+          name: 'Asistencias_${DateTime.now().millisecondsSinceEpoch}',
+          bytes: uint8List,
+          ext: 'xlsx',
+          mimeType: MimeType.microsoftExcel,
+        );
+        debugPrint('debugPrint = $result');
+        success = true;
+      }
+    } catch(e){
+      debugPrint("Error al generar Excel: $e");
+      success = false;
+    }
+
+    CustomSnackBar.show(
+      context,
+      success: success,
+      message: success
+          ? "Archivo descargado correctamente en Descargas."
+          : "Error al generar el archivo.",
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     Size size = MediaQuery.of(context).size;
@@ -288,6 +352,53 @@ class _AttendanceState extends State<Attendance> {
                         style: const TextStyle(
                             fontWeight: FontWeight.bold, color: Colors.red)),
                   ),
+                  const SizedBox(height: 20),
+                  Container(
+                    width: double.infinity,
+                    height: 55,
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [
+                          Color(0xFF1D6F42),
+                          Color(0xFF2E8B57),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(14),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.green.withOpacity(0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 4),
+                        )
+                      ],
+                    ),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(14),
+                        onTap: () {
+                          attendanceExportXlsx(context, asistencias);
+                        },
+                        child: const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.sim_card_download, color: Colors.white,),
+                            SizedBox(width: 10),
+                            Text(
+                              "Excel",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+
+
                   const SizedBox(height: 20),
                   attendanceTable(asistencias),
                 ],
