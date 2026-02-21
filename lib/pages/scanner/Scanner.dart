@@ -16,7 +16,7 @@ class Scanner extends StatefulWidget {
 
 class _ScannerState extends State<Scanner> {
   MobileScannerController cameraController = MobileScannerController(
-    detectionSpeed: DetectionSpeed.noDuplicates, // Evita múltiples detecciones
+    detectionSpeed: DetectionSpeed.noDuplicates,
   );
   bool _screenOpened = false;
   int? eventId;
@@ -29,8 +29,6 @@ class _ScannerState extends State<Scanner> {
     final args = ModalRoute.of(context)!.settings.arguments;
     if (args is int) {
       eventId = args;
-      print(
-          "Evento recibido en Scanner: $eventId"); // Verificar que se recibe correctamente
     }
   }
 
@@ -53,8 +51,6 @@ class _ScannerState extends State<Scanner> {
       final String code = barcode?.rawValue ?? '----';
 
       if (barcode == null || barcode.rawValue == null || int.tryParse(code) == null) {
-        //_showSnackBar('Código inválido');
-
         CustomSnackBar.show(
           context,
           success: false,
@@ -74,8 +70,6 @@ class _ScannerState extends State<Scanner> {
           eventId: eventId.toString(),
           idRegistro: id.toString(),
         );
-
-        //_showSnackBar(result['message']);
 
         CustomSnackBar.show(
           context,
