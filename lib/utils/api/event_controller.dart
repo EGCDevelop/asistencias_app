@@ -20,7 +20,7 @@ class EventController {
     final Uri url =
         Uri.parse('$apiUrl/Event/create_event'); // Endpoint del servidor
 
-    if(onlyCommanders == 1){
+    if (onlyCommanders == 1) {
       membersEntry = commandersEntry;
     }
 
@@ -38,7 +38,6 @@ class EventController {
     };
 
     try {
-      print('fecha enviada eventDate == $eventDate');
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
@@ -65,7 +64,7 @@ class EventController {
   static Future<List<Event>> getEvents(int idEscuadra) async {
     String apiUrl = Environments.apiUrl;
     final Uri url =
-          Uri.parse('$apiUrl/Event/get_events?idEscuadra=$idEscuadra');
+        Uri.parse('$apiUrl/Event/get_events?idEscuadra=$idEscuadra');
 
     try {
       final response =
@@ -203,6 +202,35 @@ class EventController {
     } catch (e) {
       print('Error de conexión: $e');
       return [];
+    }
+  }
+
+  static Future<bool> endEvent(
+      {required int eventId, required String username}) async {
+    String apiUrl = Environments.apiUrl;
+    final Uri url = Uri.parse('$apiUrl/Event/end_event');
+
+    try {
+      final Map<String, dynamic> bodyData = {
+        'eventId': eventId,
+        'username': username,
+      };
+
+      final response = await http.put(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(bodyData),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data['ok'] == true;
+      }
+      return false;
+
+    } catch (e) {
+      print('Error en endEvent: $e');
+      return false;
     }
   }
 }

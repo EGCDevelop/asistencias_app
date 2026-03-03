@@ -9,7 +9,7 @@ class Utils {
   }
 
   static String getSquadName(int squadId) {
-    switch(squadId){
+    switch (squadId) {
       case 1:
         return 'General';
       case 2:
@@ -32,7 +32,21 @@ class Utils {
   }
 
   static bool isGeneralPerfil(int position) {
-    return [1,2,3,4].contains(position);
+    return [1, 2, 3, 4].contains(position);
   }
 
+  static bool isToday(String? dateString) {
+    if (dateString == null) return false;
+
+    try {
+      DateTime date = DateTime.parse(dateString);
+      DateTime now = DateTime.now();
+
+      return date.year == now.year &&
+          date.month == now.month &&
+          date.day == now.day;
+    } catch (e) {
+      return false;
+    }
+  }
 }

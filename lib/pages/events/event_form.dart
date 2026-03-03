@@ -176,15 +176,6 @@ class _EventFormState extends State<EventForm> {
         _isLoading = false;
       });
 
-      // ScaffoldMessenger.of(context).showSnackBar(
-      //   SnackBar(
-      //     content: Text(success
-      //         ? "Evento creado exitosamente"
-      //         : "Error al crear el evento"),
-      //     backgroundColor: success ? Colors.green : Colors.red,
-      //   ),
-      // );
-
       CustomSnackBar.show(
         context,
         success: success,

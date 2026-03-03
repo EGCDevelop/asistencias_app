@@ -34,4 +34,38 @@ class AttendanceController {
       return [];
     }
   }
+
+  static Future<bool> registerExtraordinaryDeparture({
+    required int eventId,
+    required String exitComment,
+    required int memberId,
+    required String username
+  }) async {
+    String apiUrl = Environments.apiUrl;
+    final Uri url =
+        Uri.parse('$apiUrl/Asistencia/register_extraordinary_departure');
+
+    try {
+      final Map<String, dynamic> bodyData = {
+        'eventId': eventId,
+        'exitComment': exitComment,
+        'memberId': memberId,
+        'username': username
+      };
+
+      final response = await http.put(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(bodyData),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data['ok'] == true;
+      }
+      return false;
+    } catch (e) {
+      return false;
+    }
+  }
 }

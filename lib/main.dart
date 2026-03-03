@@ -52,7 +52,6 @@ class MyApp extends StatelessWidget {
       initialRoute: 'login',
       routes: {
         'login': (context) => const Login(),
-        //'menu' : (context) => const Menu(),
         'menu' : (context) => const MainDrawerController(),
         'scanner' : (context) => const Scanner(),
         'scanner_event': (context) => const ScannerEvent(),

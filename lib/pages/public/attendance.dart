@@ -6,7 +6,10 @@ import 'package:asistencias_egc/provider/AuthProvider.dart';
 import 'package:asistencias_egc/utils/api/attendance_controller.dart';
 import 'package:asistencias_egc/utils/api/event_controller.dart';
 import 'package:asistencias_egc/utils/api/general_methods_controllers.dart';
+import 'package:asistencias_egc/utils/utils.dart';
 import 'package:asistencias_egc/widgets/CustomAppBar.dart';
+import 'package:asistencias_egc/widgets/CustomTextField.dart';
+import 'package:asistencias_egc/widgets/GenericDialog.dart';
 import 'package:asistencias_egc/widgets/LoadingAnimation.dart';
 import 'package:asistencias_egc/widgets/animation/CustomSnackBar.dart';
 import 'package:excel/excel.dart';
@@ -44,27 +47,35 @@ class _AttendanceState extends State<Attendance> {
     });
     List<Escuadras> squads = await GeneralMethodsControllers.GetSquads();
     var authProvider = Provider.of<AuthProvider>(context, listen: false);
-    int userEscuadraId = authProvider.user!.escuadraId; // Obtener el escuadraId
+    int userEscuadraId = authProvider.user!.escuadraId;
+    String username = authProvider.user!.username;
 
     setState(() {
       if (userEscuadraId == 1 || userEscuadraId == 12) {
-        escuadras = squads.where((e) => e.escIdEscuadra == userEscuadraId || e.escIdEscuadra == 14).toList();
+        escuadras = squads
+            .where((e) =>
+                e.escIdEscuadra == userEscuadraId || e.escIdEscuadra == 14)
+            .toList();
       } else if (userEscuadraId == 2 || userEscuadraId == 13) {
-        escuadras = squads.where((e) => e.escIdEscuadra == userEscuadraId || e.escIdEscuadra == 15).toList();
+        escuadras = squads
+            .where((e) =>
+                e.escIdEscuadra == userEscuadraId || e.escIdEscuadra == 15)
+            .toList();
       } else if (userEscuadraId == 11) {
         escuadras = squads;
       } else {
-        escuadras = squads.where((e) => e.escIdEscuadra == userEscuadraId).toList();
+        escuadras =
+            squads.where((e) => e.escIdEscuadra == userEscuadraId).toList();
       }
 
       if (userEscuadraId == 11) {
         selectedEscuadra = escuadras.firstWhere(
-              (e) => e.escIdEscuadra == 1,
+          (e) => e.escIdEscuadra == 1,
           orElse: () => escuadras.first,
         );
       } else {
         selectedEscuadra = escuadras.firstWhere(
-              (e) => e.escIdEscuadra == userEscuadraId,
+          (e) => e.escIdEscuadra == userEscuadraId,
           orElse: () => escuadras.first,
         );
       }
@@ -162,9 +173,10 @@ class _AttendanceState extends State<Attendance> {
     }
   }
 
-  Future<void> attendanceExportXlsx(BuildContext context, List<Asistencia> attendance) async {
+  Future<void> attendanceExportXlsx(
+      BuildContext context, List<Asistencia> attendance) async {
     bool success = false;
-    try{
+    try {
       final excel = Excel.createExcel();
       final Sheet sheet = excel["Asistencias"];
       excel.delete('Sheet1');
@@ -184,7 +196,7 @@ class _AttendanceState extends State<Attendance> {
       ]);
 
       // filas
-      for(var data in attendance){
+      for (var data in attendance) {
         sheet.appendRow([
           TextCellValue(data.intNombres),
           TextCellValue(data.intApellidos),
@@ -199,17 +211,15 @@ class _AttendanceState extends State<Attendance> {
       if (fileBytes != null) {
         final uint8List = Uint8List.fromList(fileBytes);
 
-        final result = await FileSaver.instance.saveAs(
+        await FileSaver.instance.saveAs(
           name: 'Asistencias_${DateTime.now().millisecondsSinceEpoch}',
           bytes: uint8List,
           ext: 'xlsx',
           mimeType: MimeType.microsoftExcel,
         );
-        debugPrint('debugPrint = $result');
         success = true;
       }
-    } catch(e){
-      debugPrint("Error al generar Excel: $e");
+    } catch (e) {
       success = false;
     }
 
@@ -222,6 +232,84 @@ class _AttendanceState extends State<Attendance> {
     );
   }
 
+  Future<void> _showExitDialog(
+      BuildContext context, Asistencia asistencia) async {
+    final TextEditingController _commentController = TextEditingController();
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+
+    showDialog(
+      context: context,
+      builder: (context) => GenericDialog(
+        title: 'Confirmación de salida',
+        confirmColor: Colors.black,
+        content: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Registrar salida para:'),
+            Text('${asistencia.intNombres} ${asistencia.intApellidos}',
+                style: const TextStyle(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 20),
+            CustomTextField(
+              controller: _commentController,
+              label: 'Comentario...',
+              icon: Icons.comment,
+              isPassword: false,
+              focusLabelColor: Colors.indigo,
+            ),
+          ],
+        ),
+        onConfirm: () async {
+          bool success =
+              await AttendanceController.registerExtraordinaryDeparture(
+            eventId: asistencia.asieveId,
+            exitComment: _commentController.text,
+            memberId: asistencia.intIdIntegrante,
+            username: authProvider.user!.username,
+          );
+
+          if (success) {
+            CustomSnackBar.show(context,
+                success: true, message: "Salida registrada.");
+            _loadAttendance();
+          }
+          return success;
+        },
+      ),
+    );
+  }
+
+  Future<void> _showJustifyDialog(
+      BuildContext context, Asistencia asistencia) async {
+    return showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return GenericDialog(
+          title: 'Motivo de Salida',
+          // NO enviamos onConfirm para que solo aparezca el botón de cerrar
+          content: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 10),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.grey[100],
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  asistencia.asiComentarioSalida ??
+                      'Sin descripción disponible',
+                  style: const TextStyle(fontSize: 16, color: Colors.black),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     Size size = MediaQuery.of(context).size;
@@ -230,178 +318,186 @@ class _AttendanceState extends State<Attendance> {
         PopScope(
           canPop: true,
           child: Scaffold(
+            resizeToAvoidBottomInset: true,
             appBar: const CustomAppBar(title: 'Asistencia'),
             body: Padding(
               padding: const EdgeInsets.all(16.0),
-              child: Column(
-                children: <Widget>[
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.black, // Fondo negro
-                        shape: RoundedRectangleBorder(
-                          borderRadius:
-                              BorderRadius.circular(5), // Bordes redondeados
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                child: Column(
+                  children: <Widget>[
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.black, // Fondo negro
+                          shape: RoundedRectangleBorder(
+                            borderRadius:
+                                BorderRadius.circular(5), // Bordes redondeados
+                          ),
+                        ),
+                        onPressed: () => _selectDate(context),
+                        child: Text(
+                          "Fecha: ${DateFormat('dd/MM/yyyy').format(selectedDate)}",
+                          style: const TextStyle(color: Colors.white),
                         ),
                       ),
-                      onPressed: () => _selectDate(context),
-                      child: Text(
-                        "Fecha: ${DateFormat('dd/MM/yyyy').format(selectedDate)}",
-                        style: const TextStyle(color: Colors.white),
+                    ),
+                    const SizedBox(
+                      height: 10,
+                    ),
+                    Container(
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: Colors.black,
+                        borderRadius: BorderRadius.circular(5),
                       ),
-                    ),
-                  ),
-                  const SizedBox(
-                    height: 10,
-                  ),
-                  Container(
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      color: Colors.black,
-                      borderRadius: BorderRadius.circular(5),
-                    ),
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: DropdownButton<Escuadras>(
-                            isExpanded: true,
-                            value: selectedEscuadra,
-                            onChanged: (Escuadras? newValue) {
-                              setState(() {
-                                selectedEscuadra = newValue;
-                              });
-                              _getEvents();
-                            },
-                            items: escuadras.map((escuadra) {
-                              return DropdownMenuItem<Escuadras>(
-                                value: escuadra,
-                                child: Align(
-                                  alignment: Alignment.centerLeft,
-                                  child: Text(
-                                    escuadra.escNombre,
-                                    style: const TextStyle(color: Colors.white),
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: DropdownButton<Escuadras>(
+                              isExpanded: true,
+                              value: selectedEscuadra,
+                              onChanged: (Escuadras? newValue) {
+                                setState(() {
+                                  selectedEscuadra = newValue;
+                                });
+                                _getEvents();
+                              },
+                              items: escuadras.map((escuadra) {
+                                return DropdownMenuItem<Escuadras>(
+                                  value: escuadra,
+                                  child: Align(
+                                    alignment: Alignment.centerLeft,
+                                    child: Text(
+                                      escuadra.escNombre,
+                                      style:
+                                          const TextStyle(color: Colors.white),
+                                    ),
                                   ),
-                                ),
-                              );
-                            }).toList(),
-                            style: const TextStyle(color: Colors.white),
-                            dropdownColor: Colors.black,
-                            underline: Container(),
+                                );
+                              }).toList(),
+                              style: const TextStyle(color: Colors.white),
+                              dropdownColor: Colors.black,
+                              underline: Container(),
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(
-                    height: 10,
-                  ),
-                  Container(
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      color: Colors.black,
-                      borderRadius: BorderRadius.circular(5),
-                    ),
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: DropdownButton<Event>(
-                            value: selectedEvent,
-                            onChanged: (Event? newValue) {
-                              setState(() {
-                                selectedEvent = newValue;
-                              });
-                              _loadAttendance(); // Llamar a función tras selección
-                            },
-                            items: events.map((event) {
-                              return DropdownMenuItem<Event>(
-                                value: event,
-                                child: Text(
-                                  event.eveTitulo,
-                                  style: const TextStyle(color: Colors.white),
-                                ),
-                              );
-                            }).toList(),
-                            style: const TextStyle(color: Colors.white),
-                            dropdownColor: Colors.black,
-                            underline: Container(),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  SizedBox(
-                    width: size.width,
-                    child: Text('Total: ${asistencias.length}',
-                        style: const TextStyle(fontWeight: FontWeight.bold)),
-                  ),
-                  SizedBox(
-                    width: size.width,
-                    child: Text(
-                        'Asistencia: ${asistencias.where((a) => a.asistencia == 1).length}',
-                        style: const TextStyle(
-                            fontWeight: FontWeight.bold, color: Colors.green)),
-                  ),
-                  SizedBox(
-                    width: size.width,
-                    child: Text(
-                        'Faltantes: ${asistencias.where((a) => a.asistencia == 0).length}',
-                        style: const TextStyle(
-                            fontWeight: FontWeight.bold, color: Colors.red)),
-                  ),
-                  const SizedBox(height: 20),
-                  Container(
-                    width: double.infinity,
-                    height: 55,
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [
-                          Color(0xFF1D6F42),
-                          Color(0xFF2E8B57),
                         ],
                       ),
-                      borderRadius: BorderRadius.circular(14),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.green.withOpacity(0.3),
-                          blurRadius: 8,
-                          offset: const Offset(0, 4),
-                        )
-                      ],
                     ),
-                    child: Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(14),
-                        onTap: () {
-                          attendanceExportXlsx(context, asistencias);
-                        },
-                        child: const Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.sim_card_download, color: Colors.white,),
-                            SizedBox(width: 10),
-                            Text(
-                              "Excel",
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                              ),
+                    const SizedBox(
+                      height: 10,
+                    ),
+                    Container(
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: Colors.black,
+                        borderRadius: BorderRadius.circular(5),
+                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: DropdownButton<Event>(
+                              value: selectedEvent,
+                              onChanged: (Event? newValue) {
+                                setState(() {
+                                  selectedEvent = newValue;
+                                });
+                                _loadAttendance(); // Llamar a función tras selección
+                              },
+                              items: events.map((event) {
+                                return DropdownMenuItem<Event>(
+                                  value: event,
+                                  child: Text(
+                                    event.eveTitulo,
+                                    style: const TextStyle(color: Colors.white),
+                                  ),
+                                );
+                              }).toList(),
+                              style: const TextStyle(color: Colors.white),
+                              dropdownColor: Colors.black,
+                              underline: Container(),
                             ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    SizedBox(
+                      width: size.width,
+                      child: Text('Total: ${asistencias.length}',
+                          style: const TextStyle(fontWeight: FontWeight.bold)),
+                    ),
+                    SizedBox(
+                      width: size.width,
+                      child: Text(
+                          'Asistencia: ${asistencias.where((a) => a.asistencia == 1).length}',
+                          style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.green)),
+                    ),
+                    SizedBox(
+                      width: size.width,
+                      child: Text(
+                          'Faltantes: ${asistencias.where((a) => a.asistencia == 0).length}',
+                          style: const TextStyle(
+                              fontWeight: FontWeight.bold, color: Colors.red)),
+                    ),
+                    const SizedBox(height: 20),
+                    Container(
+                      width: double.infinity,
+                      height: 55,
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [
+                            Color(0xFF1D6F42),
+                            Color(0xFF2E8B57),
                           ],
+                        ),
+                        borderRadius: BorderRadius.circular(14),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.green.withOpacity(0.3),
+                            blurRadius: 8,
+                            offset: const Offset(0, 4),
+                          )
+                        ],
+                      ),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(14),
+                          onTap: () {
+                            attendanceExportXlsx(context, asistencias);
+                          },
+                          child: const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.sim_card_download,
+                                color: Colors.white,
+                              ),
+                              SizedBox(width: 10),
+                              Text(
+                                "Excel",
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
-                  ),
-
-
-                  const SizedBox(height: 20),
-                  attendanceTable(asistencias),
-                ],
+                    const SizedBox(height: 20),
+                    attendanceTable(context, asistencias, _showExitDialog,
+                        _showJustifyDialog),
+                  ],
+                ),
               ),
             ),
           ),
@@ -412,71 +508,117 @@ class _AttendanceState extends State<Attendance> {
   }
 }
 
-Widget attendanceTable(List<Asistencia> attendance) {
-  return Expanded(
+Widget attendanceTable(
+    BuildContext context,
+    List<Asistencia> attendance,
+    Function(BuildContext, Asistencia) onExitPressed,
+    Function(BuildContext, Asistencia) onJustifyPressed) {
+  return SingleChildScrollView(
+    scrollDirection: Axis.horizontal,
+    // Scroll horizontal para evitar desbordamiento
     child: SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      // Scroll horizontal para evitar desbordamiento
-      child: SingleChildScrollView(
-        scrollDirection: Axis.vertical,
-        child: DataTable(
-          columnSpacing: 30, // Más espacio entre columnas
-          headingRowColor:
-              WidgetStateProperty.resolveWith((states) => Colors.black),
-          columns: const [
-            DataColumn(
-              label: Text(
-                "Asistencia",
-                style:
-                    TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-              ),
+      scrollDirection: Axis.vertical,
+      child: DataTable(
+        columnSpacing: 30, // Más espacio entre columnas
+        headingRowColor:
+            WidgetStateProperty.resolveWith((states) => Colors.black),
+        columns: const [
+          DataColumn(
+            label: Text(
+              "Asistencia",
+              style:
+                  TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
             ),
-            DataColumn(
-              label: Text(
-                "Nombre",
-                style:
-                    TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-              ),
+          ),
+          DataColumn(
+            label: Text(
+              "Nombre",
+              style:
+                  TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
             ),
-            DataColumn(
-              label: Text(
-                "Apellido",
-                style:
-                    TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-              ),
+          ),
+          DataColumn(
+            label: Text(
+              "Apellido",
+              style:
+                  TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
             ),
-            DataColumn(
-              label: Text(
-                "Fecha",
-                style:
-                    TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-              ),
+          ),
+          DataColumn(
+            label: Text(
+              "Fecha entrada",
+              style:
+                  TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
             ),
-          ],
-          rows: attendance.map((asistencia) {
-            return DataRow(cells: [
-              DataCell(
-                Center(
-                  child: Icon(
-                    asistencia.asistencia == 1
-                        ? Icons.check_circle
-                        : Icons.cancel,
-                    color:
-                        asistencia.asistencia == 1 ? Colors.green : Colors.red,
-                  ),
+          ),
+          DataColumn(
+            label: Text(
+              "Fecha salida",
+              style:
+                  TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            ),
+          ),
+          DataColumn(
+            label: Text(
+              "Acciones",
+              style:
+                  TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+        rows: attendance.map((asistencia) {
+          return DataRow(cells: [
+            DataCell(
+              Center(
+                child: Icon(
+                  asistencia.asistencia == 1
+                      ? Icons.check_circle
+                      : Icons.cancel,
+                  color: asistencia.asistencia == 1 ? Colors.green : Colors.red,
                 ),
               ),
-              DataCell(Text(asistencia.intNombres)),
-              DataCell(Text(asistencia.intApellidos)),
-              DataCell(Text(
-                asistencia.asiFechaAsistencia != null
-                    ? DateFormat('dd-MM-yyyy hh:mm')
-                        .format(DateTime.parse(asistencia.asiFechaAsistencia!))
-                    : "--/--/----", // Si es null, espacio en blanco
-              )),
-            ]);
-          }).toList(),
-        ),
+            ),
+            DataCell(Text(asistencia.intNombres)),
+            DataCell(Text(asistencia.intApellidos)),
+            DataCell(Text(
+              asistencia.asiFechaAsistencia != null
+                  ? DateFormat('dd-MM-yyyy HH:mm:ss')
+                      .format(DateTime.parse(asistencia.asiFechaAsistencia!))
+                  : "--/--/----",
+            )),
+            DataCell(Text(
+              asistencia.asiFechaSalida != null
+                  ? DateFormat('dd-MM-yyyy HH:mm:ss')
+                      .format(DateTime.parse(asistencia.asiFechaSalida!))
+                  : "--/--/----",
+            )),
+            DataCell(Row(
+              children: <Widget>[
+                if (Utils.isToday(asistencia.asiFechaSalida))
+                  asistencia.asiFechaSalida == null
+                      ? IconButton(
+                          onPressed: () => onExitPressed(context, asistencia),
+                          icon: const Icon(
+                            Icons.exit_to_app,
+                            color: Colors.indigo,
+                          ),
+                        )
+                      : IconButton(
+                          onPressed: () =>
+                              onJustifyPressed(context, asistencia),
+                          icon: const Icon(
+                            Icons.mark_chat_unread,
+                            color: Colors.teal,
+                          ),
+                        )
+                else
+                  const SizedBox(
+                      width: 48,
+                      child: Icon(Icons.history, color: Colors.grey, size: 20)),
+              ],
+            ))
+          ]);
+        }).toList(),
       ),
     ),
   );

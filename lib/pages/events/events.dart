@@ -1,14 +1,12 @@
 import 'package:asistencias_egc/models/event.dart';
 import 'package:asistencias_egc/provider/AuthProvider.dart';
 import 'package:asistencias_egc/utils/api/event_controller.dart';
-import 'package:asistencias_egc/utils/utils.dart';
 import 'package:asistencias_egc/widgets/CustomAppBar.dart';
 import 'package:asistencias_egc/widgets/LoadingAnimation.dart';
 import 'package:asistencias_egc/widgets/animation/CustomSnackBar.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:table_calendar/table_calendar.dart';
-import 'package:intl/intl.dart';
 
 class Events extends StatefulWidget {
   const Events({super.key});
@@ -24,6 +22,7 @@ class _EventsState extends State<Events> {
   Map<DateTime, List<Event>> eventsMap = {};
   DateTime? _lastTappedDay;
   DateTime? _lastTapTime;
+  int userEscuadraId = 0;
 
   @override
   void initState() {
@@ -32,12 +31,12 @@ class _EventsState extends State<Events> {
   }
 
   Future<void> _getEvents() async {
+    var authProvider = Provider.of<AuthProvider>(context, listen: false);
+
     setState(() {
       _isLoading = true;
+      userEscuadraId = authProvider.user!.escuadraId;
     });
-
-    var authProvider = Provider.of<AuthProvider>(context, listen: false);
-    int userEscuadraId = authProvider.user!.escuadraId; // Obtener el escuadraId
 
     List<Event> list = await EventController.getEvents(userEscuadraId);
 
@@ -62,6 +61,58 @@ class _EventsState extends State<Events> {
     if (result == true) {
       _getEvents(); // Refresca los eventos en el calendario
     }
+  }
+
+  Future<void> _handleEndEvent(int eventId) async {
+    var authProvider = Provider.of<AuthProvider>(context, listen: false);
+    String username = authProvider.user!.username;
+
+    setState(() => _isLoading = true);
+
+    bool success = await EventController.endEvent(
+      eventId: eventId,
+      username: username,
+    );
+
+    setState(() => _isLoading = false);
+
+    if (success) {
+      Navigator.pop(context); // Cierra el modal de lista de eventos
+      _getEvents(); // Refresca el calendario
+    }
+
+    CustomSnackBar.show(
+      context,
+      success: success,
+      message: success
+          ? "Evento finalizado exitosamente."
+          : "Error al finalizar el evento",
+    ); // [cite: 68]
+  }
+
+  void _confirmEndEvent(int eventId) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("Confirmar acción"),
+          content: const Text("¿Está seguro que desea finalizar el evento?"),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context), // Solo cierra el diálogo
+              child: Text("No", style: TextStyle(color: Colors.red[900])),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context); // Cierra el diálogo
+                _handleEndEvent(eventId); // Ejecuta la lógica
+              },
+              child: const Text("Si", style: TextStyle(color: Colors.indigo)),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -167,13 +218,14 @@ class _EventsState extends State<Events> {
                 ),
               ],
             ),
-            floatingActionButton: FloatingActionButton(
-              onPressed: _navigateToEventForm,
-              backgroundColor: Colors.black,
-              shape: const CircleBorder(),
-              // Esto fuerza la forma completamente circular
-              child: const Icon(Icons.add, size: 30, color: Colors.white),
-            ),
+            floatingActionButton: userEscuadraId == 11
+                ? FloatingActionButton(
+                    onPressed: _navigateToEventForm,
+                    backgroundColor: Colors.black,
+                    shape: const CircleBorder(),
+                    child: const Icon(Icons.add, size: 30, color: Colors.white),
+                  )
+                : null,
             floatingActionButtonLocation: FloatingActionButtonLocation
                 .endFloat, // Posición en la esquina inferior derecha
           ),
@@ -198,8 +250,8 @@ class _EventsState extends State<Events> {
             children: [
               Text(
                 "Eventos del ${selectedDate.day}/${selectedDate.month}/${selectedDate.year}",
-                style: const TextStyle(
-                    fontSize: 20, fontWeight: FontWeight.bold),
+                style:
+                    const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 10),
               events.isNotEmpty
@@ -209,82 +261,103 @@ class _EventsState extends State<Events> {
                       itemBuilder: (context, index) {
                         return GestureDetector(
                           onTap: () {
-                            Navigator.pushNamed(context, 'event_form', arguments: events[index]);
+                            Navigator.pushNamed(context, 'event_form',
+                                arguments: events[index]);
                           },
-                          child: ListTile(
-                            title: Text(
-                              events[index].eveTitulo,
-                              style: const TextStyle(fontSize: 16),
-                            ),
-                            leading:
-                                const Icon(Icons.event, color: Colors.black),
-                            subtitle: Column(
-                              children: <Widget>[
-                                SizedBox(
-                                  width: double.infinity,
-                                  child: Text(
-                                    events[index].eveDescripcion,
-                                    style: const TextStyle(fontSize: 14),
-                                  ),
+                          child: Column(
+                            children: [
+                              ListTile(
+                                title: Text(
+                                  events[index].eveTitulo,
+                                  style: const TextStyle(fontSize: 16),
                                 ),
-                                SizedBox(
-                                  width: double.infinity,
-                                  child: Text(
-                                    'Cmte : ${events[index].eveHoraEntradaComandantes}',
-                                    style: const TextStyle(fontSize: 14),
-                                  ),
+                                leading: const Icon(Icons.event,
+                                    color: Colors.black),
+                                subtitle: Column(
+                                  children: <Widget>[
+                                    SizedBox(
+                                      width: double.infinity,
+                                      child: Text(
+                                        events[index].eveDescripcion,
+                                        style: const TextStyle(fontSize: 14),
+                                      ),
+                                    ),
+                                    SizedBox(
+                                      width: double.infinity,
+                                      child: Text(
+                                        'Cmte : ${events[index].eveHoraEntradaComandantes}',
+                                        style: const TextStyle(fontSize: 14),
+                                      ),
+                                    ),
+                                    SizedBox(
+                                      width: double.infinity,
+                                      child: Text(
+                                        'Int : ${events[index].eveHoraEntradaIntegrantes}',
+                                        style: const TextStyle(fontSize: 14),
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                                SizedBox(
-                                  width: double.infinity,
-                                  child: Text(
-                                    'Int : ${events[index].eveHoraEntradaIntegrantes}',
-                                    style: const TextStyle(fontSize: 14),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            trailing: IconButton(
-                              icon: const Icon(Icons.delete, color: Colors.red),
-                              onPressed: () async {
-                                bool success =
-                                    await EventController.deleteEvent(
-                                        idEvent: events[index].eveId);
+                              ),
+                              events[index].eveActivo == 1
+                                  ? Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceEvenly,
+                                      children: [
+                                        Column(
+                                          children: [
+                                            IconButton(
+                                              icon: const Icon(
+                                                  Icons.check_circle,
+                                                  color: Colors.indigo),
+                                              onPressed: () => _confirmEndEvent(
+                                                  events[index].eveId),
+                                            ),
+                                            const Text("Finalizar")
+                                          ],
+                                        ),
+                                        Column(
+                                          children: [
+                                            IconButton(
+                                              icon: const Icon(Icons.delete,
+                                                  color: Colors.red),
+                                              onPressed: () async {
+                                                bool success =
+                                                    await EventController
+                                                        .deleteEvent(
+                                                            idEvent:
+                                                                events[index]
+                                                                    .eveId);
 
-                                if (success) {
-                                  Navigator.pop(context); // Cerrar el modal
-                                  _getEvents();
-                                  CustomSnackBar.show(
-                                    context,
-                                    success: success,
-                                    message: success
-                                        ? "Evento eliminado exitosamente."
-                                        : " ",
-                                  );
-                                  // ScaffoldMessenger.of(context).showSnackBar(
-                                  //   const SnackBar(
-                                  //     content:
-                                  //         Text("Evento eliminado exitosamente"),
-                                  //     backgroundColor: Colors.green,
-                                  //   ),
-                                  // );
-                                } else {
-                                  CustomSnackBar.show(
-                                    context,
-                                    success: success,
-                                    message: success
-                                        ? "Error al eliminar el evento"
-                                        : "Error al eliminar el evento",
-                                  );
-                                  // ScaffoldMessenger.of(context).showSnackBar(
-                                  //   const SnackBar(
-                                  //     content:
-                                  //         Text("Error al eliminar el evento"),
-                                  //     backgroundColor: Colors.red,
-                                  //   ),
-                                  // );
-                                }
-                              }, // Sin acción por ahora
-                            ),
+                                                if (success) {
+                                                  Navigator.pop(
+                                                      context); // Cerrar el modal
+                                                  _getEvents();
+                                                  CustomSnackBar.show(
+                                                    context,
+                                                    success: success,
+                                                    message: success
+                                                        ? "Evento eliminado exitosamente."
+                                                        : " ",
+                                                  );
+                                                } else {
+                                                  CustomSnackBar.show(
+                                                    context,
+                                                    success: success,
+                                                    message: success
+                                                        ? "Error al eliminar el evento"
+                                                        : "Error al eliminar el evento",
+                                                  );
+                                                }
+                                              }, // Sin acción por ahora
+                                            ),
+                                            const Text("Eliminar")
+                                          ],
+                                        ),
+                                      ],
+                                    )
+                                  : Container(),
+                            ],
                           ),
                         );
                       },

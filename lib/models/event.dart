@@ -12,6 +12,7 @@ class Event {
   final String eveFechaModificacon;
   final int eveBandaGeneral;
   final String? listadoEscuadras;
+  final int? eveActivo;
 
   Event({
     required this.eveId,
@@ -26,7 +27,8 @@ class Event {
     this.eveUsuarioModificacion,
     required this.eveFechaModificacon,
     required this.eveBandaGeneral,
-    this.listadoEscuadras
+    this.listadoEscuadras,
+    this.eveActivo
   });
 
   factory Event.fromJson(Map<String, dynamic> json) {
@@ -44,6 +46,7 @@ class Event {
       eveFechaModificacon: json['eveFechaModificacon'],
       eveBandaGeneral: json["eveBandaGeneral"],
       listadoEscuadras: json['listadoEscuadras'],
+      eveActivo: json['eveActivo'],
     );
   }
 

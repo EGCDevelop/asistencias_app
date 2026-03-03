@@ -10,6 +10,9 @@ class Asistencia {
   final int asiEsExtraordinaria;
   final String? asiComentario;
   final String? asiFechaRegistroExtraordinaria;
+  final String? asiFechaSalida;
+  final String? asiUsuarioSalida;
+  final String? asiComentarioSalida;
 
   Asistencia(
       {required this.intIdIntegrante,
@@ -22,20 +25,27 @@ class Asistencia {
       required this.asiintIdIntegranteRegistro,
       required this.asiEsExtraordinaria,
       this.asiComentario,
-      this.asiFechaRegistroExtraordinaria});
+      this.asiFechaRegistroExtraordinaria,
+      this.asiFechaSalida,
+      this.asiUsuarioSalida,
+      this.asiComentarioSalida});
 
   factory Asistencia.fromJson(Map<String, dynamic> json) {
     return Asistencia(
-        intIdIntegrante: json['intIdIntegrante'],
-        intNombres: json['intNombres'],
-        intApellidos: json['intApellidos'],
-        asiIdAsistencia: json['asiIdAsistencia'],
-        asiFechaAsistencia: json['asiFechaAsistencia'],
-        asistencia: json['asistencia'],
-        asieveId: json['asieveId'],
-        asiintIdIntegranteRegistro: json['asiintIdIntegranteRegistro'],
-        asiEsExtraordinaria: json['asiEsExtraordinaria'],
-        asiComentario: json['asiComentario'],
-        asiFechaRegistroExtraordinaria: json['asiFechaRegistroExtraordinaria']);
+      intIdIntegrante: json['intIdIntegrante'],
+      intNombres: json['intNombres'],
+      intApellidos: json['intApellidos'],
+      asiIdAsistencia: json['asiIdAsistencia'],
+      asiFechaAsistencia: json['asiFechaAsistencia'],
+      asistencia: json['asistencia'],
+      asieveId: json['asieveId'],
+      asiintIdIntegranteRegistro: json['asiintIdIntegranteRegistro'],
+      asiEsExtraordinaria: json['asiEsExtraordinaria'],
+      asiComentario: json['asiComentario'],
+      asiFechaRegistroExtraordinaria: json['asiFechaRegistroExtraordinaria'],
+      asiFechaSalida: json['asiFechaSalida'],
+      asiUsuarioSalida: json['asiUsuarioSalida'],
+      asiComentarioSalida: json['asiComentarioSalida'],
+    );
   }
 }
