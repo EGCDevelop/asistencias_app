@@ -41,6 +41,15 @@ class _MemberEditState extends State<MemberEdit> {
   Degrees? selectedDegrees;
   List<Career> courses = [];
   Career? selectedCourse;
+  final TextEditingController _medicalDescriptionController =
+      TextEditingController(); // Controlador para la descripción
+  int _selectedMedicalComplication = 2;
+  bool _initialized = false;
+
+  final List<Map<String, dynamic>> medicalOptions = [
+    {'label': 'Sin complicaciones', 'value': 2},
+    {'label': 'Con complicaciones', 'value': 1},
+  ];
 
   bool _isLoading = false;
   bool _isNew = false;
@@ -125,26 +134,32 @@ class _MemberEditState extends State<MemberEdit> {
   void didChangeDependencies() {
     super.didChangeDependencies();
 
-    final args = ModalRoute.of(context)!.settings.arguments;
+    if (!_initialized) {
+      final args = ModalRoute.of(context)!.settings.arguments;
 
-    if (args is Integrantes) {
-      memberId = args.intIdIntegrante;
-      _nameController.text = args.intNombres;
-      _lastNameController.text = args.intApellidos;
-      _cellController.text = args.intTelefono;
-      _sectionController.text = args.intSeccion;
-      _isNew = args.intEsNuevo == 1 ? true : false;
-      _fatherNameController.text = args.intNombreEncargado;
-      _fatherCellController.text = args.intTelefonoEncargado;
-      _anotherEstablishmentController.text = args.intEstablecimientoNombre;
-      initialEstablecimientoId = args.intestIdEstablecimiento;
-      initialSquadId = args.intescIdEscuadra;
-      initialPosition = args.intpuIdPuesto;
-      initialDegree = args.intgraIdGrado;
-      initialCourse = args.intcarIdCarrera;
-      _isNew = args.intEsNuevo == 1;
-      isActive = args.intEstadoIntegrante == 1;
-      _courseName.text = args.intCarreraNombre;
+      if (args is Integrantes) {
+        memberId = args.intIdIntegrante;
+        _nameController.text = args.intNombres;
+        _lastNameController.text = args.intApellidos;
+        _cellController.text = args.intTelefono;
+        _sectionController.text = args.intSeccion;
+        _isNew = args.intEsNuevo == 1 ? true : false;
+        _fatherNameController.text = args.intNombreEncargado;
+        _fatherCellController.text = args.intTelefonoEncargado;
+        _anotherEstablishmentController.text = args.intEstablecimientoNombre;
+        initialEstablecimientoId = args.intestIdEstablecimiento;
+        initialSquadId = args.intescIdEscuadra;
+        initialPosition = args.intpuIdPuesto;
+        initialDegree = args.intgraIdGrado;
+        initialCourse = args.intcarIdCarrera;
+        _isNew = args.intEsNuevo == 1;
+        isActive = args.intEstadoIntegrante == 1;
+        _courseName.text = args.intCarreraNombre;
+        _selectedMedicalComplication = args.complicacionMedica;
+        _medicalDescriptionController.text =
+            args.descripcionComplicacionMedica ?? "";
+        _initialized = true;
+      }
     }
   }
 
@@ -155,24 +170,27 @@ class _MemberEditState extends State<MemberEdit> {
       });
 
       bool success = await MembersController.updateMember(
-          memberId: memberId!,
-          firstName: _nameController.text,
-          lastName: _lastNameController.text,
-          cellPhone: _cellController.text,
-          squadId: selectedEscuadra!.escIdEscuadra,
-          positionId: selectedPosition!.puIdPuesto,
-          isActive: isActive ? 1 : 0,
-          isAncient: _isNew ? 1 : 0,
-          establecimientoId: selectedEstablecimiento!.estIdEstablecimiento,
-          anotherEstablishment: _anotherEstablishmentController.text.isEmpty
-              ? ""
-              : _anotherEstablishmentController.text,
-          courseId: selectedCourse!.carIdCarrera,
-          courseName: _courseName.text.isEmpty ? "" : _courseName.text,
-          degreeId: selectedDegrees!.graIdGrado,
-          section: _sectionController.text,
-          fatherName: _fatherNameController.text,
-          fatherCell: _fatherCellController.text);
+        memberId: memberId!,
+        firstName: _nameController.text,
+        lastName: _lastNameController.text,
+        cellPhone: _cellController.text,
+        squadId: selectedEscuadra!.escIdEscuadra,
+        positionId: selectedPosition!.puIdPuesto,
+        isActive: isActive ? 1 : 0,
+        isAncient: _isNew ? 1 : 0,
+        establecimientoId: selectedEstablecimiento!.estIdEstablecimiento,
+        anotherEstablishment: _anotherEstablishmentController.text.isEmpty
+            ? ""
+            : _anotherEstablishmentController.text,
+        courseId: selectedCourse!.carIdCarrera,
+        courseName: _courseName.text.isEmpty ? "" : _courseName.text,
+        degreeId: selectedDegrees!.graIdGrado,
+        section: _sectionController.text,
+        fatherName: _fatherNameController.text,
+        fatherCell: _fatherCellController.text,
+        complicationMedical: _selectedMedicalComplication,
+        medicalComplicationDescription: _medicalDescriptionController.text,
+      );
 
       setState(() {
         _isLoading = false;
@@ -201,7 +219,9 @@ class _MemberEditState extends State<MemberEdit> {
       children: [
         PopScope(
           child: Scaffold(
-            appBar: AppBar(title: const Text("Editar integrante"), backgroundColor: Colors.white),
+            appBar: AppBar(
+                title: const Text("Editar integrante"),
+                backgroundColor: Colors.white),
             body: SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
               child: Padding(
@@ -576,6 +596,72 @@ class _MemberEditState extends State<MemberEdit> {
                       const SizedBox(
                         height: 30,
                       ),
+
+                      _titles('Salud'),
+                      const SizedBox(
+                        height: 30,
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            "Situación médica",
+                            style: TextStyle(
+                                color: Colors.black,
+                                fontWeight: FontWeight.w400),
+                          ),
+                          const SizedBox(height: 10),
+                          Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: Colors.black),
+                            ),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 18, vertical: 5),
+                            child: DropdownButton<int>(
+                              isExpanded: true,
+                              value: _selectedMedicalComplication,
+                              onChanged: (int? newValue) {
+                                if (newValue != null) {
+                                  setState(() {
+                                    _selectedMedicalComplication = newValue;
+                                  });
+                                }
+                              },
+                              items: medicalOptions.map((opt) {
+                                return DropdownMenuItem<int>(
+                                  value: opt['value'],
+                                  child: Text(
+                                    opt['label'],
+                                    style: const TextStyle(color: Colors.black),
+                                  ),
+                                );
+                              }).toList(),
+                              underline: Container(),
+                            ),
+                          ),
+                          if (_selectedMedicalComplication == 1) ...[
+                            const SizedBox(height: 20),
+                            CustomTextField(
+                              controller: _medicalDescriptionController,
+                              label: 'Descripción de la complicación',
+                              icon: Icons.medical_services,
+                              isPassword: false,
+                              validator: (value) {
+                                if (_selectedMedicalComplication == 1 &&
+                                    (value == null || value.isEmpty)) {
+                                  return 'Por favor describe la complicación médica';
+                                }
+                                return null;
+                              },
+                            ),
+                          ],
+                        ],
+                      ),
+                      const SizedBox(
+                        height: 40,
+                      ),
+
                       //TODO: estara comentado hasta que se apliquen las restricciones del conocimiento del dispositivo por usuario
                       /*_titles('Otros datos'),
                       const SizedBox(

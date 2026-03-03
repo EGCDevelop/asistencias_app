@@ -48,7 +48,6 @@ class _AttendanceState extends State<Attendance> {
     List<Escuadras> squads = await GeneralMethodsControllers.GetSquads();
     var authProvider = Provider.of<AuthProvider>(context, listen: false);
     int userEscuadraId = authProvider.user!.escuadraId;
-    String username = authProvider.user!.username;
 
     setState(() {
       if (userEscuadraId == 1 || userEscuadraId == 12) {

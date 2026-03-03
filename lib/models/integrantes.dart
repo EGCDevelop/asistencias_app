@@ -21,6 +21,8 @@ class Integrantes {
   final int intEstadoIntegrante;
   final int intpuIdPuesto;
   final String puNombre;
+  final int complicacionMedica;
+  final String? descripcionComplicacionMedica;
 
   Integrantes({
     required this.intIdIntegrante,
@@ -45,6 +47,8 @@ class Integrantes {
     required this.intEstadoIntegrante,
     required this.intpuIdPuesto,
     required this.puNombre,
+    required this.complicacionMedica,
+    this.descripcionComplicacionMedica
   });
 
   factory Integrantes.fromJson(Map<String, dynamic> json) {
@@ -71,6 +75,8 @@ class Integrantes {
       intEstadoIntegrante: json['intEstadoIntegrante'],
       intpuIdPuesto: json['intpuIdPuesto'],
       puNombre: json['puNombre'],
+      complicacionMedica: json['complicacionMedica'],
+      descripcionComplicacionMedica: json['descripcionComplicacionMedica']
     );
   }
 
