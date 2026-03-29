@@ -6,7 +6,6 @@ import 'package:asistencias_egc/provider/AuthProvider.dart';
 import 'package:asistencias_egc/utils/api/attendance_controller.dart';
 import 'package:asistencias_egc/utils/api/event_controller.dart';
 import 'package:asistencias_egc/utils/api/general_methods_controllers.dart';
-import 'package:asistencias_egc/utils/utils.dart';
 import 'package:asistencias_egc/widgets/CustomAppBar.dart';
 import 'package:asistencias_egc/widgets/CustomTextField.dart';
 import 'package:asistencias_egc/widgets/GenericDialog.dart';
@@ -61,6 +60,8 @@ class _AttendanceState extends State<Attendance> {
                 e.escIdEscuadra == userEscuadraId || e.escIdEscuadra == 15)
             .toList();
       } else if (userEscuadraId == 11) {
+        Escuadras general = Escuadras(escIdEscuadra: 11, escNombre: "Generales");
+        squads.add(general);
         escuadras = squads;
       } else {
         escuadras =
@@ -98,7 +99,7 @@ class _AttendanceState extends State<Attendance> {
         selectedEscuadra?.escIdEscuadra ?? authProvider.user!.escuadraId;
 
     List<Event> dataList =
-        await EventController.getEventsByFilters(userEscuadraId, formattedDate);
+        await EventController.getEventsByFilters(userEscuadraId, formattedDate, 0);
 
     setState(() {
       events = dataList;
@@ -129,16 +130,46 @@ class _AttendanceState extends State<Attendance> {
 
     setState(() => _isLoading = true);
 
-    var authProvider = Provider.of<AuthProvider>(context, listen: false);
-    String formattedDate = DateFormat('yyyy-MM-dd').format(selectedDate);
-    int eventId = selectedEvent?.eveId ?? 0;
-    int userEscuadraId =
-        selectedEscuadra?.escIdEscuadra ?? authProvider.user!.escuadraId;
+    try{
+      var authProvider = Provider.of<AuthProvider>(context, listen: false);
+      String formattedDate = DateFormat('yyyy-MM-dd').format(selectedDate);
+      int eventId = selectedEvent?.eveId ?? 0;
+      int userEscuadraId =
+          selectedEscuadra?.escIdEscuadra ?? authProvider.user!.escuadraId;
 
-    asistencias = await AttendanceController.getAsistencia(
-        userEscuadraId, formattedDate, eventId);
+      asistencias = await AttendanceController.getAsistencia(
+          userEscuadraId, formattedDate, eventId, authProvider.user!.token);
 
-    setState(() => _isLoading = false);
+      setState(() => _isLoading = false);
+    } catch(e){
+      setState(() => _isLoading = false);
+
+      // Verificamos si el error es por el token de 1 minuto (401)
+      if (e.toString().contains("UNAUTHORIZED")) {
+        //Limpiamos el estado del Provider (opcional pero recomendado)
+        Provider.of<AuthProvider>(context, listen: false).logout();
+
+        // 2. Mostramos el mensaje al usuario
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content:
+            Text("Su sesión ha expirado. Por favor, ingrese de nuevo."),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+
+        // 3. Navegamos al login eliminando todo el historial de pantallas
+        Navigator.pushNamedAndRemoveUntil(context, 'login', (route) => false);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content:
+            Text("Error cargando asistencia $e"),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+      }
+    }
   }
 
   void _selectDate(BuildContext context) async {
@@ -260,7 +291,7 @@ class _AttendanceState extends State<Attendance> {
         onConfirm: () async {
           bool success =
               await AttendanceController.registerExtraordinaryDeparture(
-            eventId: asistencia.asieveId,
+            eventId: selectedEvent!.eveId,
             exitComment: _commentController.text,
             memberId: asistencia.intIdIntegrante,
             username: authProvider.user!.username,
@@ -593,23 +624,44 @@ Widget attendanceTable(
             )),
             DataCell(Row(
               children: <Widget>[
-                if (Utils.isToday(asistencia.asiFechaSalida))
+                // if (Utils.isToday(asistencia.asiFechaSalida))
+                //   asistencia.asiFechaSalida == null
+                //       ? IconButton(
+                //           onPressed: () => onExitPressed(context, asistencia),
+                //           icon: const Icon(
+                //             Icons.exit_to_app,
+                //             color: Colors.indigo,
+                //           ),
+                //         )
+                //       : IconButton(
+                //           onPressed: () =>
+                //               onJustifyPressed(context, asistencia),
+                //           icon: const Icon(
+                //             Icons.mark_chat_unread,
+                //             color: Colors.teal,
+                //           ),
+                //         )
+                // else
+                //   const SizedBox(
+                //       width: 48,
+                //       child: Icon(Icons.history, color: Colors.grey, size: 20)),
+                if (asistencia.asiFechaAsistencia != null)
                   asistencia.asiFechaSalida == null
                       ? IconButton(
-                          onPressed: () => onExitPressed(context, asistencia),
-                          icon: const Icon(
-                            Icons.exit_to_app,
-                            color: Colors.indigo,
-                          ),
-                        )
+                    onPressed: () => onExitPressed(context, asistencia),
+                    icon: const Icon(
+                      Icons.exit_to_app,
+                      color: Colors.indigo,
+                    ),
+                  )
                       : IconButton(
-                          onPressed: () =>
-                              onJustifyPressed(context, asistencia),
-                          icon: const Icon(
-                            Icons.mark_chat_unread,
-                            color: Colors.teal,
-                          ),
-                        )
+                    onPressed: () =>
+                        onJustifyPressed(context, asistencia),
+                    icon: const Icon(
+                      Icons.mark_chat_unread,
+                      color: Colors.teal,
+                    ),
+                  )
                 else
                   const SizedBox(
                       width: 48,

@@ -47,45 +47,80 @@ class _ScannerState extends State<Scanner> {
   void _foundBarcode2(BarcodeCapture capture, int escuadraComandante,
       int puestoComandante, String token, int id) async {
     if (!_screenOpened) {
-      final Barcode? barcode = capture.barcodes.firstOrNull;
-      final String code = barcode?.rawValue ?? '----';
+      try{
+        final Barcode? barcode = capture.barcodes.firstOrNull;
+        final String code = barcode?.rawValue ?? '----';
 
-      if (barcode == null || barcode.rawValue == null || int.tryParse(code) == null) {
-        CustomSnackBar.show(
-          context,
-          success: false,
-          message: "Código inválido.",
-        );
-      } else {
-        setState(() {
-          isLoading = true;
-        });
-        _screenOpened = true;
+        if (barcode == null || barcode.rawValue == null || int.tryParse(code) == null) {
+          CustomSnackBar.show(
+            context,
+            success: false,
+            message: "Código inválido.",
+          );
+        } else {
+          setState(() {
+            isLoading = true;
+          });
+          _screenOpened = true;
 
-        final result = await ScannerController.registerAttendance(
-          id: code,
-          escuadra: escuadraComandante.toString(),
-          puesto: puestoComandante.toString(),
-          token: token,
-          eventId: eventId.toString(),
-          idRegistro: id.toString(),
-        );
+          final result = await ScannerController.registerAttendance(
+            id: code,
+            escuadra: escuadraComandante.toString(),
+            puesto: puestoComandante.toString(),
+            token: token,
+            eventId: eventId.toString(),
+            idRegistro: id.toString(),
+          );
 
-        CustomSnackBar.show(
-          context,
-          success: true,
-          message: result['message'],
-        );
+          CustomSnackBar.show(
+            context,
+            success: true,
+            message: result['message'],
+          );
 
-        // Reiniciar la cámara para permitir nueva lectura
-        _screenOpened = false;
-        setState(() {
-          isLoading = false;
-        });
+          // Reiniciar la cámara para permitir nueva lectura
+          _screenOpened = false;
+          setState(() {
+            isLoading = false;
+          });
 
-        await Future.delayed(const Duration(milliseconds: 500)); // Pequeña pausa
-        cameraController.start(); // Reactivar la cámara
+          await Future.delayed(const Duration(milliseconds: 500)); // Pequeña pausa
+          cameraController.start();
+        }
+      } catch(e) {
+        setState(() => isLoading = false);
+
+        if (e.toString().contains("UNAUTHORIZED")) {
+          //Limpiamos el estado del Provider
+          Provider.of<AuthProvider>(context, listen: false).logout();
+
+          //Mostramos el mensaje al usuario
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content:
+              Text("Su sesión ha expirado. Por favor, ingrese de nuevo."),
+              backgroundColor: Colors.redAccent,
+            ),
+          );
+
+          //Navegamos al login eliminando todo el historial de pantallas
+          Navigator.pushNamedAndRemoveUntil(context, 'login', (route) => false);
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content:
+              Text("Error cargando asistencia $e"),
+              backgroundColor: Colors.redAccent,
+            ),
+          );
+        }
       }
+
+
+
+
+
+
     }
   }
 

@@ -34,6 +34,13 @@ class _EventFormState extends State<EventForm> {
   bool _generalBand = true;
   DateTime? selectedDate;
 
+  final List<Map<String, dynamic>> eventType = [
+    {"id": 1, "name": "Todos"},
+    {"id": 2, "name": "Nuevos"},
+    {"id": 3, "name": "Antiguos"}
+  ];
+  int selectedTypeEvent = 1;
+
   // Controlador para mostrar la hora en un TextField
   final TextEditingController _timeControllerComanders =
       TextEditingController();
@@ -133,6 +140,8 @@ class _EventFormState extends State<EventForm> {
       _timeControllerComanders.text = args.eveHoraEntradaComandantes;
       _timeControllerMembers.text = args.eveHoraEntradaIntegrantes!;
       _generalBand = args.eveBandaGeneral == 1;
+      selectedTypeEvent = args.tipoIntegrantes;
+
 
       _loadSelectedSquads();
     } else if (args is DateTime) {
@@ -151,7 +160,7 @@ class _EventFormState extends State<EventForm> {
 
       // banda general
       if (_generalBand) {
-        for (int i = 1; i < 12; i++) {
+        for (int i = 1; i < 16; i++) {
           idList.add(i);
         }
       } else {
@@ -170,7 +179,9 @@ class _EventFormState extends State<EventForm> {
           membersEntry: _timeControllerMembers.text,
           onlyCommanders: _onlyCommanders ? 1 : 0,
           squads: idList,
-          generalBand: _generalBand ? 1 : 0);
+          generalBand: _generalBand ? 1 : 0,
+        eventType: selectedTypeEvent
+      );
 
       setState(() {
         _isLoading = false;
@@ -253,6 +264,44 @@ class _EventFormState extends State<EventForm> {
                           },
                         ),
                         const SizedBox(
+                          height: 20,
+                        ),
+                        const Text(
+                          "Tipo de evento",
+                          style: TextStyle(
+                              color: Colors.black,
+                              fontWeight: FontWeight.w400),
+                        ),
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.black,
+                            borderRadius: BorderRadius.circular(5),
+                          ),
+                          padding:
+                          const EdgeInsets.symmetric(horizontal: 16),
+                          child: DropdownButton<int>(
+                            isExpanded: true,
+                            value: selectedTypeEvent,
+                            onChanged: (int? newValue) {
+                              setState(() {
+                                selectedTypeEvent = newValue!;
+                              });
+                            },
+                            items: eventType.map((state) {
+                              return DropdownMenuItem<int>(
+                                value: state["id"],
+                                child: Text(
+                                  state["name"],
+                                  style:
+                                  const TextStyle(color: Colors.white),
+                                ),
+                              );
+                            }).toList(),
+                            dropdownColor: Colors.black,
+                            underline: Container(),
+                          ),
+                        ),
+                        const SizedBox(
                           height: 50,
                         ),
                         _titles('Hora del evento'),
@@ -325,6 +374,7 @@ class _EventFormState extends State<EventForm> {
                           onTap: () =>
                               _selectTime(context, _timeControllerMembers),
                         ),
+
                         const SizedBox(
                           height: 50,
                         ),

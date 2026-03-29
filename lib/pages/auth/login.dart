@@ -159,7 +159,7 @@ class _LoginState extends State<Login> {
                           duration: Duration(milliseconds: 1000),
                           delay: Duration(milliseconds: 1500),
                           child: Center(
-                            child: Text(Utils.APP_VERSION,
+                            child: Text('v${Utils.APP_VERSION}',
                               style: TextStyle(fontWeight: FontWeight.w500),
                             ),
                           ),

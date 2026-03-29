@@ -5,17 +5,17 @@ import 'package:asistencias_egc/utils/api/Environments.dart';
 import 'package:http/http.dart' as http;
 
 class EventController {
-  static Future<bool> createEvent({
-    required String title,
-    required String description,
-    required String userCreate,
-    required String eventDate,
-    required String commandersEntry,
-    required String membersEntry,
-    required int onlyCommanders,
-    required List<int> squads,
-    required int generalBand,
-  }) async {
+  static Future<bool> createEvent(
+      {required String title,
+      required String description,
+      required String userCreate,
+      required String eventDate,
+      required String commandersEntry,
+      required String membersEntry,
+      required int onlyCommanders,
+      required List<int> squads,
+      required int generalBand,
+      required int eventType}) async {
     String apiUrl = Environments.apiUrl;
     final Uri url =
         Uri.parse('$apiUrl/Event/create_event'); // Endpoint del servidor
@@ -34,7 +34,8 @@ class EventController {
       "membersEntry": membersEntry,
       "onlyCommanders": onlyCommanders,
       "squads": squads,
-      "generalBand": generalBand
+      "generalBand": generalBand,
+      "eventType": eventType
     };
 
     try {
@@ -65,7 +66,6 @@ class EventController {
     String apiUrl = Environments.apiUrl;
     final Uri url =
         Uri.parse('$apiUrl/Event/get_events?idEscuadra=$idEscuadra');
-
     try {
       final response =
           await http.get(url, headers: {'Content-Type': 'application/json'});
@@ -146,10 +146,10 @@ class EventController {
   }
 
   static Future<List<Event>> getEventsByFilters(
-      int idEscuadra, String date) async {
+      int idEscuadra, String date, int activo) async {
     String apiUrl = Environments.apiUrl;
     final Uri url = Uri.parse(
-        '$apiUrl/Event/get_events_by_filters?idEscuadra=$idEscuadra&date=$date');
+        '$apiUrl/Event/get_events_by_filters?idEscuadra=$idEscuadra&date=$date&activo=$activo');
 
     try {
       final response =
@@ -227,7 +227,6 @@ class EventController {
         return data['ok'] == true;
       }
       return false;
-
     } catch (e) {
       print('Error en endEvent: $e');
       return false;

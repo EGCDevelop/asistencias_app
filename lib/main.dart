@@ -6,6 +6,7 @@ import 'package:asistencias_egc/pages/members/member_edit.dart';
 import 'package:asistencias_egc/pages/members/members.dart';
 import 'package:asistencias_egc/pages/public/MainDrawerController.dart';
 import 'package:asistencias_egc/pages/public/attendance.dart';
+import 'package:asistencias_egc/pages/public/participationHistory.dart';
 import 'package:asistencias_egc/pages/scanner/Scanner.dart';
 import 'package:asistencias_egc/pages/scanner/scanner_event.dart';
 import 'package:asistencias_egc/provider/AuthProvider.dart';
@@ -61,6 +62,7 @@ class MyApp extends StatelessWidget {
         'members': (context) => const Members(),
         'member_edit': (context) => const MemberEdit(),
         'attendance_char': (context) => const AttendanceChar(),
+        'participation_history': (context) => const ParticipationHistory()
       },
     );
   }

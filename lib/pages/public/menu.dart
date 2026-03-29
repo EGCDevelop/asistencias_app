@@ -16,7 +16,8 @@ class _MenuState extends State<Menu> {
     {'title': 'Ver asistencia', 'icon': Icons.list_alt, 'route': 'attendance', 'delay': 0},
     {'title': 'Eventos', 'icon': Icons.calendar_month, 'route': 'event', 'delay': 200 },
     {'title': 'Integrantes', 'icon': Icons.person, 'route': 'members', 'delay': 200 },
-    {'title': 'Grafica', 'icon': Icons.pie_chart, 'route': 'attendance_char', 'delay': 400 },
+    {'title': 'Gráfica', 'icon': Icons.pie_chart, 'route': 'attendance_char', 'delay': 400 },
+    {'title': 'Historial', 'icon': Icons.history, 'route': 'participation_history', 'delay': 400 },
   ];
 
   @override

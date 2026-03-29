@@ -35,15 +35,24 @@ class ScannerController {
         body: jsonEncode(body),
       );
 
-      final data = jsonDecode(response.body);
+      if(response.statusCode == 200) {
+        final data = jsonDecode(response.body);
 
-      if (response.statusCode == 200 && data['ok']) {
-        return {'success': true, 'message': data['message']};
-      } else {
-        return {'success': false, 'message': data['message'] ?? 'Error desconocido'};
+        if(data['ok'] == true){
+          return {'success': true, 'message': data['message']};
+        } else {
+          return {'success': false, 'message': data['message'] ?? 'Error desconocido'};
+        }
       }
+
+      if (response.statusCode == 401) {
+        throw Exception("UNAUTHORIZED");
+      }
+
+      throw Exception("Error en la petición: ${response.statusCode}");
     } catch(e) {
-      return {'success': false, 'message': 'Error de conexión: $e'};
+      print('Error detectado: $e');
+      rethrow;
     }
 
 

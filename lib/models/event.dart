@@ -13,6 +13,7 @@ class Event {
   final int eveBandaGeneral;
   final String? listadoEscuadras;
   final int? eveActivo;
+  final int tipoIntegrantes;
 
   Event({
     required this.eveId,
@@ -28,7 +29,8 @@ class Event {
     required this.eveFechaModificacon,
     required this.eveBandaGeneral,
     this.listadoEscuadras,
-    this.eveActivo
+    this.eveActivo,
+    required this.tipoIntegrantes
   });
 
   factory Event.fromJson(Map<String, dynamic> json) {
@@ -47,6 +49,7 @@ class Event {
       eveBandaGeneral: json["eveBandaGeneral"],
       listadoEscuadras: json['listadoEscuadras'],
       eveActivo: json['eveActivo'],
+      tipoIntegrantes: json['tipoIntegrantes']
     );
   }
 

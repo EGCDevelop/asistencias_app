@@ -25,11 +25,13 @@ class _ScannerEventState extends State<ScannerEvent> {
     });
 
     var authProvider = Provider.of<AuthProvider>(context, listen: false);
-    int userEscuadraId = authProvider.user!.escuadraId; // Obtener el escuadraId
-    String formattedDateFrom = DateFormat('yyyy-MM-dd').format(DateTime.now());
+    int userEscuadraId = authProvider.user!.escuadraId;
+    DateTime primeroDeEnero = DateTime(DateTime.now().year, 1, 1);
+    //String formattedDateFrom = DateFormat('yyyy-MM-dd').format(DateTime.now());
+    String formattedDateFrom = DateFormat('yyyy-MM-dd').format(primeroDeEnero);
 
     List<Event> dataList = await EventController.getEventsByFilters(
-        userEscuadraId, formattedDateFrom);
+        userEscuadraId, formattedDateFrom, 1);
 
     setState(() {
       _isLoading = false;

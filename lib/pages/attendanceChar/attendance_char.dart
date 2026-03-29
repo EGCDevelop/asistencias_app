@@ -55,6 +55,7 @@ class _AttendanceCharState extends State<AttendanceChar> {
         escNombre: 'Todas',
       ),
     );
+    squads.add(Escuadras(escIdEscuadra: 11, escNombre: "General"));
     setState(() {
       escuadras = squads;
       selectedEscuadra = escuadras.first;
@@ -73,17 +74,21 @@ class _AttendanceCharState extends State<AttendanceChar> {
     var authProvider = Provider.of<AuthProvider>(context, listen: false);
 
     // Determinamos el ID de búsqueda inicial
-    int userEscuadraId = selectedEscuadra?.escIdEscuadra ?? authProvider.user!.escuadraId;
-    userEscuadraId = userEscuadraId == 0 ? authProvider.user!.escuadraId : userEscuadraId;
+    int userEscuadraId =
+        selectedEscuadra?.escIdEscuadra ?? authProvider.user!.escuadraId;
+    userEscuadraId =
+        userEscuadraId == 0 ? authProvider.user!.escuadraId : userEscuadraId;
 
-    List<Event> dataList = await EventController.getEventsByFilters(userEscuadraId, formattedDate);
+    List<Event> dataList =
+        await EventController.getEventsByFilters(userEscuadraId, formattedDate, 0);
 
     setState(() {
       events = dataList;
       if (events.isNotEmpty) {
         // Si ya tenemos un evento seleccionado, intentamos mantener la versión "completa"
         // que ya teníamos para no perder el listado de escuadras original.
-        bool sigueExistiendo = events.any((e) => e.eveId == selectedEvent?.eveId);
+        bool sigueExistiendo =
+            events.any((e) => e.eveId == selectedEvent?.eveId);
 
         if (selectedEvent == null || !sigueExistiendo) {
           selectedEvent = (events.length > 1) ? events[1] : events.first;
@@ -94,7 +99,7 @@ class _AttendanceCharState extends State<AttendanceChar> {
           List<int> ids = selectedEvent!.idsEscuadras;
           if (!ids.contains(selectedEscuadra?.escIdEscuadra)) {
             selectedEscuadra = escuadras.firstWhere(
-                  (esc) => ids.contains(esc.escIdEscuadra),
+              (esc) => ids.contains(esc.escIdEscuadra),
               orElse: () => escuadras.first,
             );
           }
@@ -110,7 +115,8 @@ class _AttendanceCharState extends State<AttendanceChar> {
     if (selectedEvent != null) {
       _loadAsistencia();
 
-      List<AttendanceChartDTO> data = await AttendanceCharController.getChartData(
+      List<AttendanceChartDTO> data =
+          await AttendanceCharController.getChartData(
         context,
         selectedEvent!.eveId,
         selectedEscuadra?.escIdEscuadra ?? 0,
@@ -132,16 +138,44 @@ class _AttendanceCharState extends State<AttendanceChar> {
 
     setState(() => _isLoading = true);
 
-    var authProvider = Provider.of<AuthProvider>(context, listen: false);
-    String formattedDate = DateFormat('yyyy-MM-dd').format(selectedDate);
-    int eventId = selectedEvent?.eveId ?? 0;
-    int userEscuadraId =
-        selectedEscuadra?.escIdEscuadra ?? authProvider.user!.escuadraId;
+    try {
+      var authProvider = Provider.of<AuthProvider>(context, listen: false);
+      String formattedDate = DateFormat('yyyy-MM-dd').format(selectedDate);
+      int eventId = selectedEvent?.eveId ?? 0;
+      int userEscuadraId =
+          selectedEscuadra?.escIdEscuadra ?? authProvider.user!.escuadraId;
 
-    asistencias = await AttendanceController.getAsistencia(
-        userEscuadraId, formattedDate, eventId);
+      asistencias = await AttendanceController.getAsistencia(
+          userEscuadraId, formattedDate, eventId, authProvider.user!.token);
+      setState(() => _isLoading = false);
+    } catch (e) {
+      setState(() => _isLoading = false);
 
-    setState(() => _isLoading = false);
+      if (e.toString().contains("UNAUTHORIZED")) {
+        // 1. Limpiamos el estado del Provider (opcional pero recomendado)
+        Provider.of<AuthProvider>(context, listen: false).logout();
+
+        // 2. Mostramos el mensaje al usuario
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content:
+                Text("Su sesión ha expirado. Por favor, ingrese de nuevo."),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+
+        // 3. Navegamos al login eliminando todo el historial de pantallas
+        Navigator.pushNamedAndRemoveUntil(context, 'login', (route) => false);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content:
+            Text("Error cargando asistencia $e"),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+      }
+    }
   }
 
   void _selectDate(BuildContext context) async {
@@ -222,15 +256,16 @@ class _AttendanceCharState extends State<AttendanceChar> {
                       child: Row(
                         children: [
                           Expanded(
-                            child:
-                            DropdownButton<int>(
+                            child: DropdownButton<int>(
                               value: selectedEvent?.eveId,
                               onChanged: (int? newId) {
                                 if (newId != null) {
                                   setState(() {
-                                    selectedEvent = events.firstWhere((e) => e.eveId == newId);
+                                    selectedEvent = events
+                                        .firstWhere((e) => e.eveId == newId);
                                   });
                                   _loadAsistencia();
+                                  _getEvents();
                                 }
                               },
                               items: events.map((event) {
@@ -261,19 +296,20 @@ class _AttendanceCharState extends State<AttendanceChar> {
                       child: Row(
                         children: [
                           Expanded(
-                            child:
-                            DropdownButton<int>(
+                            child: DropdownButton<int>(
                               isExpanded: true,
                               value: selectedEscuadra?.escIdEscuadra,
                               onChanged: (position < 5)
                                   ? (int? newId) {
-                                if (newId != null) {
-                                  setState(() {
-                                    selectedEscuadra = escuadras.firstWhere((esc) => esc.escIdEscuadra == newId);
-                                  });
-                                  _getEvents();
-                                }
-                              }
+                                      if (newId != null) {
+                                        setState(() {
+                                          selectedEscuadra =
+                                              escuadras.firstWhere((esc) =>
+                                                  esc.escIdEscuadra == newId);
+                                        });
+                                        _getEvents();
+                                      }
+                                    }
                                   : null,
                               // Busca el items: escuadras.where en la línea 79 de tu código
                               items: escuadras.where((esc) {
@@ -282,10 +318,13 @@ class _AttendanceCharState extends State<AttendanceChar> {
 
                                 // 2. Si no hay evento o es Banda General, mostrar TODAS las escuadras cargadas
                                 // Esto evita que al filtrar por una, las demás desaparezcan
-                                if (selectedEvent == null || selectedEvent!.eveBandaGeneral == 1) return true;
+                                if (selectedEvent == null ||
+                                    selectedEvent!.eveBandaGeneral == 1)
+                                  return true;
 
                                 // 3. Si es restringido, mostrar solo las permitidas por el evento original
-                                return selectedEvent!.idsEscuadras.contains(esc.escIdEscuadra);
+                                return selectedEvent!.idsEscuadras
+                                    .contains(esc.escIdEscuadra);
                               }).map((escuadra) {
                                 return DropdownMenuItem<int>(
                                   value: escuadra.escIdEscuadra,
@@ -293,7 +332,8 @@ class _AttendanceCharState extends State<AttendanceChar> {
                                     alignment: Alignment.centerLeft,
                                     child: Text(
                                       escuadra.escNombre,
-                                      style: const TextStyle(color: Colors.white),
+                                      style:
+                                          const TextStyle(color: Colors.white),
                                     ),
                                   ),
                                 );
@@ -309,7 +349,6 @@ class _AttendanceCharState extends State<AttendanceChar> {
                     const SizedBox(
                       height: 10,
                     ),
-
                     const SizedBox(height: 20),
                     buildPieChart(),
                     buildProgressBarRows()
@@ -329,8 +368,6 @@ class _AttendanceCharState extends State<AttendanceChar> {
     int totalAsistencias =
         chartData.fold(0, (sum, item) => sum + item.asistencias);
     int totalFaltas = chartData.fold(0, (sum, item) => sum + item.faltan);
-    int totalIntegrantes =
-        chartData.fold(0, (sum, item) => sum + item.totalIntegrantes);
 
     int total = totalAsistencias + totalFaltas;
 
@@ -521,8 +558,9 @@ class _AttendanceCharState extends State<AttendanceChar> {
             child: Text(
               "Resumen",
               style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,),
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
               textAlign: TextAlign.center,
             ),
           ),

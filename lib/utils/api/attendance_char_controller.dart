@@ -14,8 +14,6 @@ class AttendanceCharController {
     int eventId,
     int escuadra,
   ) async {
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-
     String apiUrl = Environments.apiUrl;
     final Uri url = Uri.parse(
         '$apiUrl/Chart/get_data_from_attendance_charet?eventId=$eventId&squadId=$escuadra');
