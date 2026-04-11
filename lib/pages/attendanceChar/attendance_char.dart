@@ -23,6 +23,7 @@ class AttendanceChar extends StatefulWidget {
 
 class _AttendanceCharState extends State<AttendanceChar> {
   Color greenColor = const Color(0xFF006414);
+  Color orangeColor = Colors.orange;
   Color redColor = const Color(0xFFD31900);
   Color blueColor = const Color(0xFF1465bb);
 
@@ -79,8 +80,8 @@ class _AttendanceCharState extends State<AttendanceChar> {
     userEscuadraId =
         userEscuadraId == 0 ? authProvider.user!.escuadraId : userEscuadraId;
 
-    List<Event> dataList =
-        await EventController.getEventsByFilters(userEscuadraId, formattedDate, 0);
+    List<Event> dataList = await EventController.getEventsByFilters(
+        userEscuadraId, formattedDate, 0);
 
     setState(() {
       events = dataList;
@@ -169,8 +170,7 @@ class _AttendanceCharState extends State<AttendanceChar> {
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content:
-            Text("Error cargando asistencia $e"),
+            content: Text("Error cargando asistencia $e"),
             backgroundColor: Colors.redAccent,
           ),
         );
@@ -220,139 +220,144 @@ class _AttendanceCharState extends State<AttendanceChar> {
           canPop: true,
           child: Scaffold(
             appBar: const CustomAppBar(title: 'Gráficas'),
-            body: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                child: Column(
-                  children: <Widget>[
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.black, // Fondo negro
-                          shape: RoundedRectangleBorder(
-                            borderRadius:
-                                BorderRadius.circular(5), // Bordes redondeados
-                          ),
-                        ),
-                        onPressed: () => _selectDate(context),
-                        child: Text(
-                          "Fecha: ${DateFormat('dd/MM/yyyy').format(selectedDate)}",
-                          style: const TextStyle(color: Colors.white),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(
-                      height: 10,
-                    ),
-                    Container(
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                        color: Colors.black,
-                        borderRadius: BorderRadius.circular(5),
-                      ),
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: DropdownButton<int>(
-                              value: selectedEvent?.eveId,
-                              onChanged: (int? newId) {
-                                if (newId != null) {
-                                  setState(() {
-                                    selectedEvent = events
-                                        .firstWhere((e) => e.eveId == newId);
-                                  });
-                                  _loadAsistencia();
-                                  _getEvents();
-                                }
-                              },
-                              items: events.map((event) {
-                                return DropdownMenuItem<int>(
-                                  value: event.eveId,
-                                  child: Text(
-                                    event.eveTitulo,
-                                    style: const TextStyle(color: Colors.white),
-                                  ),
-                                );
-                              }).toList(),
-                              style: const TextStyle(color: Colors.white),
-                              dropdownColor: Colors.black,
-                              underline: Container(),
+            body: RefreshIndicator(
+              color: Colors.white,
+              backgroundColor: Colors.black,
+              onRefresh: _loadAsistencia,
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  child: Column(
+                    children: <Widget>[
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.black, // Fondo negro
+                            shape: RoundedRectangleBorder(
+                              borderRadius:
+                                  BorderRadius.circular(5), // Bordes redondeados
                             ),
                           ),
-                        ],
+                          onPressed: () => _selectDate(context),
+                          child: Text(
+                            "Fecha: ${DateFormat('dd/MM/yyyy').format(selectedDate)}",
+                            style: const TextStyle(color: Colors.white),
+                          ),
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 15),
-                    Container(
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                        color: Colors.black,
-                        borderRadius: BorderRadius.circular(5),
+                      const SizedBox(
+                        height: 10,
                       ),
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: DropdownButton<int>(
-                              isExpanded: true,
-                              value: selectedEscuadra?.escIdEscuadra,
-                              onChanged: (position < 5)
-                                  ? (int? newId) {
-                                      if (newId != null) {
-                                        setState(() {
-                                          selectedEscuadra =
-                                              escuadras.firstWhere((esc) =>
-                                                  esc.escIdEscuadra == newId);
-                                        });
-                                        _getEvents();
-                                      }
-                                    }
-                                  : null,
-                              // Busca el items: escuadras.where en la línea 79 de tu código
-                              items: escuadras.where((esc) {
-                                // 1. "Todas" siempre visible
-                                if (esc.escIdEscuadra == 0) return true;
-
-                                // 2. Si no hay evento o es Banda General, mostrar TODAS las escuadras cargadas
-                                // Esto evita que al filtrar por una, las demás desaparezcan
-                                if (selectedEvent == null ||
-                                    selectedEvent!.eveBandaGeneral == 1)
-                                  return true;
-
-                                // 3. Si es restringido, mostrar solo las permitidas por el evento original
-                                return selectedEvent!.idsEscuadras
-                                    .contains(esc.escIdEscuadra);
-                              }).map((escuadra) {
-                                return DropdownMenuItem<int>(
-                                  value: escuadra.escIdEscuadra,
-                                  child: Align(
-                                    alignment: Alignment.centerLeft,
+                      Container(
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          color: Colors.black,
+                          borderRadius: BorderRadius.circular(5),
+                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: DropdownButton<int>(
+                                value: selectedEvent?.eveId,
+                                onChanged: (int? newId) {
+                                  if (newId != null) {
+                                    setState(() {
+                                      selectedEvent = events
+                                          .firstWhere((e) => e.eveId == newId);
+                                    });
+                                    _loadAsistencia();
+                                    _getEvents();
+                                  }
+                                },
+                                items: events.map((event) {
+                                  return DropdownMenuItem<int>(
+                                    value: event.eveId,
                                     child: Text(
-                                      escuadra.escNombre,
-                                      style:
-                                          const TextStyle(color: Colors.white),
+                                      event.eveTitulo,
+                                      style: const TextStyle(color: Colors.white),
                                     ),
-                                  ),
-                                );
-                              }).toList(),
-                              style: const TextStyle(color: Colors.white),
-                              dropdownColor: Colors.black,
-                              underline: Container(),
+                                  );
+                                }).toList(),
+                                style: const TextStyle(color: Colors.white),
+                                dropdownColor: Colors.black,
+                                underline: Container(),
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-                    const SizedBox(
-                      height: 10,
-                    ),
-                    const SizedBox(height: 20),
-                    buildPieChart(),
-                    buildProgressBarRows()
-                  ],
+                      const SizedBox(height: 15),
+                      Container(
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          color: Colors.black,
+                          borderRadius: BorderRadius.circular(5),
+                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: DropdownButton<int>(
+                                isExpanded: true,
+                                value: selectedEscuadra?.escIdEscuadra,
+                                onChanged: (position < 5)
+                                    ? (int? newId) {
+                                        if (newId != null) {
+                                          setState(() {
+                                            selectedEscuadra =
+                                                escuadras.firstWhere((esc) =>
+                                                    esc.escIdEscuadra == newId);
+                                          });
+                                          _getEvents();
+                                        }
+                                      }
+                                    : null,
+                                // Busca el items: escuadras.where en la línea 79 de tu código
+                                items: escuadras.where((esc) {
+                                  // 1. "Todas" siempre visible
+                                  if (esc.escIdEscuadra == 0) return true;
+
+                                  // 2. Si no hay evento o es Banda General, mostrar TODAS las escuadras cargadas
+                                  // Esto evita que al filtrar por una, las demás desaparezcan
+                                  if (selectedEvent == null ||
+                                      selectedEvent!.eveBandaGeneral == 1)
+                                    return true;
+
+                                  // 3. Si es restringido, mostrar solo las permitidas por el evento original
+                                  return selectedEvent!.idsEscuadras
+                                      .contains(esc.escIdEscuadra);
+                                }).map((escuadra) {
+                                  return DropdownMenuItem<int>(
+                                    value: escuadra.escIdEscuadra,
+                                    child: Align(
+                                      alignment: Alignment.centerLeft,
+                                      child: Text(
+                                        escuadra.escNombre,
+                                        style:
+                                            const TextStyle(color: Colors.white),
+                                      ),
+                                    ),
+                                  );
+                                }).toList(),
+                                style: const TextStyle(color: Colors.white),
+                                dropdownColor: Colors.black,
+                                underline: Container(),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(
+                        height: 10,
+                      ),
+                      const SizedBox(height: 20),
+                      buildPieChart(),
+                      buildProgressBarRows()
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -367,6 +372,7 @@ class _AttendanceCharState extends State<AttendanceChar> {
     // Calcular totales desde los datos
     int totalAsistencias =
         chartData.fold(0, (sum, item) => sum + item.asistencias);
+    int totalPermisions = chartData.fold(0, (sum, item) => sum + item.permisos);
     int totalFaltas = chartData.fold(0, (sum, item) => sum + item.faltan);
 
     int total = totalAsistencias + totalFaltas;
@@ -450,6 +456,19 @@ class _AttendanceCharState extends State<AttendanceChar> {
                         radius: 60,
                         titlePositionPercentageOffset: 0.6,
                       ),
+                      PieChartSectionData(
+                        color: orangeColor,
+                        value: totalPermisions.toDouble(),
+                        title:
+                            '${porcentaje(totalPermisions.toDouble()).toStringAsFixed(1)}%',
+                        titleStyle: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                        radius: 60,
+                        titlePositionPercentageOffset: 0.6,
+                      ),
                     ],
                   ),
                 ),
@@ -462,9 +481,7 @@ class _AttendanceCharState extends State<AttendanceChar> {
               ],
             ),
           ),
-
           const SizedBox(height: 20),
-
           Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
@@ -472,6 +489,12 @@ class _AttendanceCharState extends State<AttendanceChar> {
                 color: greenColor,
                 label: 'Asistencias',
                 value: totalAsistencias,
+              ),
+              const SizedBox(height: 10),
+              _buildLegendRow(
+                color: orangeColor,
+                label: 'Permisos',
+                value: totalPermisions,
               ),
               const SizedBox(height: 10),
               _buildLegendRow(
@@ -569,6 +592,9 @@ class _AttendanceCharState extends State<AttendanceChar> {
             double asistenciaPct = item.totalIntegrantes > 0
                 ? item.asistencias / item.totalIntegrantes
                 : 0;
+            double permisionPct = item.totalIntegrantes > 0
+                ? item.permisos / item.totalIntegrantes
+                : 0;
             double faltaPct = item.totalIntegrantes > 0
                 ? item.faltan / item.totalIntegrantes
                 : 0;
@@ -586,11 +612,12 @@ class _AttendanceCharState extends State<AttendanceChar> {
                   ),
                 ),
                 const SizedBox(height: 4),
-
                 // Chips A y F
                 Row(
                   children: [
                     _infoChip("A: ${item.asistencias}", greenColor),
+                    const SizedBox(width: 6),
+                    _infoChip("P: ${item.permisos}", orangeColor),
                     const SizedBox(width: 6),
                     _infoChip("F: ${item.faltan}", redColor),
                   ],
@@ -613,6 +640,15 @@ class _AttendanceCharState extends State<AttendanceChar> {
                                   topLeft: Radius.circular(4),
                                   bottomLeft: Radius.circular(4),
                                 ),
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            flex: (permisionPct * 100).round(),
+                            child: Container(
+                              height: 16,
+                              decoration: BoxDecoration(
+                                color: orangeColor,
                               ),
                             ),
                           ),

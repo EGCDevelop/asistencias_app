@@ -115,4 +115,39 @@ class AttendanceController {
       return [];
     }
   }
+
+  static Future<bool> registerJustificationAbsence(
+      {required int eventId,
+        required String justificationComment,
+        required int memberId,
+        required int usernameId,
+        required String username}) async {
+    String apiUrl = Environments.apiUrl;
+    final Uri url =
+    Uri.parse('$apiUrl/Asistencia/register_justification_absence');
+
+    try {
+      final Map<String, dynamic> bodyData = {
+        'eventId': eventId,
+        'justificationComment': justificationComment,
+        'memberId': memberId,
+        'usernameId': usernameId,
+        'username': username
+      };
+
+      final response = await http.put(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(bodyData),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data['ok'] == true;
+      }
+      return false;
+    } catch (e) {
+      return false;
+    }
+  }
 }

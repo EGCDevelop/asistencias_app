@@ -46,7 +46,7 @@ class _AttendanceState extends State<Attendance> {
     });
     List<Escuadras> squads = await GeneralMethodsControllers.GetSquads();
     var authProvider = Provider.of<AuthProvider>(context, listen: false);
-    int userEscuadraId = authProvider.user!.escuadraId;
+    int? userEscuadraId = authProvider.user!.escuadraId;
 
     setState(() {
       if (userEscuadraId == 1 || userEscuadraId == 12) {
@@ -60,7 +60,8 @@ class _AttendanceState extends State<Attendance> {
                 e.escIdEscuadra == userEscuadraId || e.escIdEscuadra == 15)
             .toList();
       } else if (userEscuadraId == 11) {
-        Escuadras general = Escuadras(escIdEscuadra: 11, escNombre: "Generales");
+        Escuadras general =
+            Escuadras(escIdEscuadra: 11, escNombre: "Generales");
         squads.add(general);
         escuadras = squads;
       } else {
@@ -98,8 +99,8 @@ class _AttendanceState extends State<Attendance> {
     int userEscuadraId =
         selectedEscuadra?.escIdEscuadra ?? authProvider.user!.escuadraId;
 
-    List<Event> dataList =
-        await EventController.getEventsByFilters(userEscuadraId, formattedDate, 0);
+    List<Event> dataList = await EventController.getEventsByFilters(
+        userEscuadraId, formattedDate, 0);
 
     setState(() {
       events = dataList;
@@ -130,7 +131,7 @@ class _AttendanceState extends State<Attendance> {
 
     setState(() => _isLoading = true);
 
-    try{
+    try {
       var authProvider = Provider.of<AuthProvider>(context, listen: false);
       String formattedDate = DateFormat('yyyy-MM-dd').format(selectedDate);
       int eventId = selectedEvent?.eveId ?? 0;
@@ -141,7 +142,7 @@ class _AttendanceState extends State<Attendance> {
           userEscuadraId, formattedDate, eventId, authProvider.user!.token);
 
       setState(() => _isLoading = false);
-    } catch(e){
+    } catch (e) {
       setState(() => _isLoading = false);
 
       // Verificamos si el error es por el token de 1 minuto (401)
@@ -153,18 +154,15 @@ class _AttendanceState extends State<Attendance> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content:
-            Text("Su sesión ha expirado. Por favor, ingrese de nuevo."),
+                Text("Su sesión ha expirado. Por favor, ingrese de nuevo."),
             backgroundColor: Colors.redAccent,
           ),
         );
-
-        // 3. Navegamos al login eliminando todo el historial de pantallas
         Navigator.pushNamedAndRemoveUntil(context, 'login', (route) => false);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content:
-            Text("Error cargando asistencia $e"),
+            content: Text("Error cargando asistencia $e"),
             backgroundColor: Colors.redAccent,
           ),
         );
@@ -264,7 +262,7 @@ class _AttendanceState extends State<Attendance> {
 
   Future<void> _showExitDialog(
       BuildContext context, Asistencia asistencia) async {
-    final TextEditingController _commentController = TextEditingController();
+    final TextEditingController commentController = TextEditingController();
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
     showDialog(
@@ -280,7 +278,7 @@ class _AttendanceState extends State<Attendance> {
                 style: const TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 20),
             CustomTextField(
-              controller: _commentController,
+              controller: commentController,
               label: 'Comentario...',
               icon: Icons.comment,
               isPassword: false,
@@ -292,7 +290,7 @@ class _AttendanceState extends State<Attendance> {
           bool success =
               await AttendanceController.registerExtraordinaryDeparture(
             eventId: selectedEvent!.eveId,
-            exitComment: _commentController.text,
+            exitComment: commentController.text,
             memberId: asistencia.intIdIntegrante,
             username: authProvider.user!.username,
           );
@@ -315,7 +313,6 @@ class _AttendanceState extends State<Attendance> {
       builder: (BuildContext context) {
         return GenericDialog(
           title: 'Motivo de Salida',
-          // NO enviamos onConfirm para que solo aparezca el botón de cerrar
           content: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -340,6 +337,93 @@ class _AttendanceState extends State<Attendance> {
     );
   }
 
+  Future<void> _showRegisterJustification(
+      BuildContext context, Asistencia attendance) async {
+    final TextEditingController registerJustificationController =
+        TextEditingController();
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+
+    showDialog(
+      context: context,
+      builder: (context) => GenericDialog(
+        title: "Ausencia",
+        confirmColor: Colors.black,
+        content: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            const Text('Registrar justificación de asuencia para:'),
+            Text('${attendance.intNombres} ${attendance.intApellidos}',
+                style: const TextStyle(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 20),
+            CustomTextField(
+              controller: registerJustificationController,
+              label: "Justificación",
+              icon: Icons.comment,
+              isPassword: false,
+              focusLabelColor: Colors.indigo,
+            ),
+          ],
+        ),
+        onConfirm: () async {
+          bool success =
+              await AttendanceController.registerJustificationAbsence(
+                  username: authProvider.user!.username,
+                  eventId: selectedEvent!.eveId,
+                  justificationComment: registerJustificationController.text,
+                  memberId: attendance.intIdIntegrante,
+                  usernameId: authProvider.user!.idIntegrante);
+
+          if (success) {
+            CustomSnackBar.show(context,
+                success: true, message: "Salida registrada.");
+            _loadAttendance();
+          }
+
+          return success;
+        },
+      ),
+    );
+  }
+
+  Future<void> _showViewJustification(
+      BuildContext context, Asistencia asistencia) async {
+    return showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return GenericDialog(
+          title: 'Detalle de Justificación',
+          // Solo botón de cerrar
+          content: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                  'Registrado por: ${asistencia.asiUsuarioRegistroJustificacion ?? "N/A"}',
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold, fontSize: 14)),
+              const SizedBox(height: 10),
+              const Text('Motivo:', style: TextStyle(color: Colors.grey)),
+              const SizedBox(height: 5),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.orange.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(10),
+                  //border: Border.all(color: Colors.orange.withOpacity(0.3)),
+                ),
+                child: Text(
+                  asistencia.asiJustificacionFalta ?? 'Sin descripción',
+                  style: const TextStyle(fontSize: 16, color: Colors.black87),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     Size size = MediaQuery.of(context).size;
@@ -350,183 +434,207 @@ class _AttendanceState extends State<Attendance> {
           child: Scaffold(
             resizeToAvoidBottomInset: true,
             appBar: const CustomAppBar(title: 'Asistencia'),
-            body: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                child: Column(
-                  children: <Widget>[
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.black, // Fondo negro
-                          shape: RoundedRectangleBorder(
-                            borderRadius:
-                                BorderRadius.circular(5), // Bordes redondeados
+            body: RefreshIndicator(
+              color: Colors.white,
+              backgroundColor: Colors.black,
+              onRefresh: _loadAttendance,
+              displacement: 30,
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  child: Column(
+                    children: <Widget>[
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.black, // Fondo negro
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(
+                                  5), // Bordes redondeados
+                            ),
+                          ),
+                          onPressed: () => _selectDate(context),
+                          child: Text(
+                            "Fecha: ${DateFormat('dd/MM/yyyy').format(selectedDate)}",
+                            style: const TextStyle(color: Colors.white),
                           ),
                         ),
-                        onPressed: () => _selectDate(context),
-                        child: Text(
-                          "Fecha: ${DateFormat('dd/MM/yyyy').format(selectedDate)}",
-                          style: const TextStyle(color: Colors.white),
+                      ),
+                      const SizedBox(
+                        height: 10,
+                      ),
+                      Container(
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          color: Colors.black,
+                          borderRadius: BorderRadius.circular(5),
+                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: DropdownButton<Escuadras>(
+                                isExpanded: true,
+                                value: selectedEscuadra,
+                                onChanged: (Escuadras? newValue) {
+                                  setState(() {
+                                    selectedEscuadra = newValue;
+                                  });
+                                  _getEvents();
+                                },
+                                items: escuadras.map((escuadra) {
+                                  return DropdownMenuItem<Escuadras>(
+                                    value: escuadra,
+                                    child: Align(
+                                      alignment: Alignment.centerLeft,
+                                      child: Text(
+                                        escuadra.escNombre,
+                                        style: const TextStyle(
+                                            color: Colors.white),
+                                      ),
+                                    ),
+                                  );
+                                }).toList(),
+                                style: const TextStyle(color: Colors.white),
+                                dropdownColor: Colors.black,
+                                underline: Container(),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                    ),
-                    const SizedBox(
-                      height: 10,
-                    ),
-                    Container(
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                        color: Colors.black,
-                        borderRadius: BorderRadius.circular(5),
+                      const SizedBox(
+                        height: 10,
                       ),
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: DropdownButton<Escuadras>(
-                              isExpanded: true,
-                              value: selectedEscuadra,
-                              onChanged: (Escuadras? newValue) {
-                                setState(() {
-                                  selectedEscuadra = newValue;
-                                });
-                                _getEvents();
-                              },
-                              items: escuadras.map((escuadra) {
-                                return DropdownMenuItem<Escuadras>(
-                                  value: escuadra,
-                                  child: Align(
-                                    alignment: Alignment.centerLeft,
+                      Container(
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          color: Colors.black,
+                          borderRadius: BorderRadius.circular(5),
+                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: DropdownButton<Event>(
+                                value: selectedEvent,
+                                onChanged: (Event? newValue) {
+                                  setState(() {
+                                    selectedEvent = newValue;
+                                  });
+                                  _loadAttendance(); // Llamar a función tras selección
+                                },
+                                items: events.map((event) {
+                                  return DropdownMenuItem<Event>(
+                                    value: event,
                                     child: Text(
-                                      escuadra.escNombre,
+                                      event.eveTitulo,
                                       style:
                                           const TextStyle(color: Colors.white),
                                     ),
-                                  ),
-                                );
-                              }).toList(),
-                              style: const TextStyle(color: Colors.white),
-                              dropdownColor: Colors.black,
-                              underline: Container(),
+                                  );
+                                }).toList(),
+                                style: const TextStyle(color: Colors.white),
+                                dropdownColor: Colors.black,
+                                underline: Container(),
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(
-                      height: 10,
-                    ),
-                    Container(
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                        color: Colors.black,
-                        borderRadius: BorderRadius.circular(5),
-                      ),
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: DropdownButton<Event>(
-                              value: selectedEvent,
-                              onChanged: (Event? newValue) {
-                                setState(() {
-                                  selectedEvent = newValue;
-                                });
-                                _loadAttendance(); // Llamar a función tras selección
-                              },
-                              items: events.map((event) {
-                                return DropdownMenuItem<Event>(
-                                  value: event,
-                                  child: Text(
-                                    event.eveTitulo,
-                                    style: const TextStyle(color: Colors.white),
-                                  ),
-                                );
-                              }).toList(),
-                              style: const TextStyle(color: Colors.white),
-                              dropdownColor: Colors.black,
-                              underline: Container(),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    SizedBox(
-                      width: size.width,
-                      child: Text('Total: ${asistencias.length}',
-                          style: const TextStyle(fontWeight: FontWeight.bold)),
-                    ),
-                    SizedBox(
-                      width: size.width,
-                      child: Text(
-                          'Asistencia: ${asistencias.where((a) => a.asistencia == 1).length}',
-                          style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.green)),
-                    ),
-                    SizedBox(
-                      width: size.width,
-                      child: Text(
-                          'Faltantes: ${asistencias.where((a) => a.asistencia == 0).length}',
-                          style: const TextStyle(
-                              fontWeight: FontWeight.bold, color: Colors.red)),
-                    ),
-                    const SizedBox(height: 20),
-                    Container(
-                      width: double.infinity,
-                      height: 55,
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [
-                            Color(0xFF1D6F42),
-                            Color(0xFF2E8B57),
                           ],
                         ),
-                        borderRadius: BorderRadius.circular(14),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.green.withOpacity(0.3),
-                            blurRadius: 8,
-                            offset: const Offset(0, 4),
-                          )
-                        ],
                       ),
-                      child: Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(14),
-                          onTap: () {
-                            attendanceExportXlsx(context, asistencias);
-                          },
-                          child: const Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.sim_card_download,
-                                color: Colors.white,
-                              ),
-                              SizedBox(width: 10),
-                              Text(
-                                "Excel",
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
+                      const SizedBox(height: 20),
+                      SizedBox(
+                        width: size.width,
+                        child: Text('Total: ${asistencias.length}',
+                            style:
+                                const TextStyle(fontWeight: FontWeight.bold)),
+                      ),
+                      SizedBox(
+                        width: size.width,
+                        child: Text(
+                            'Asistencia: ${asistencias.where((a) => a.asistencia == 1 && a.asiTieneJustificacion != 2).length}',
+                            style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.green)),
+                      ),
+                      SizedBox(
+                        width: size.width,
+                        child: Text(
+                            // NUEVO: Sumamos todos los que tienen valor 2 en la justificación
+                            'Permisos: ${asistencias.where((a) => a.asiTieneJustificacion == 2).length}',
+                            style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors
+                                    .orange)), // Color naranja para distinguir permisos
+                      ),
+                      SizedBox(
+                        width: size.width,
+                        child: Text(
+                            'Faltantes: ${asistencias.where((a) => a.asistencia == 0).length}',
+                            style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.red)),
+                      ),
+                      const SizedBox(height: 20),
+                      Container(
+                        width: double.infinity,
+                        height: 55,
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [
+                              Color(0xFF1D6F42),
+                              Color(0xFF2E8B57),
                             ],
+                          ),
+                          borderRadius: BorderRadius.circular(14),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.green.withOpacity(0.3),
+                              blurRadius: 8,
+                              offset: const Offset(0, 4),
+                            )
+                          ],
+                        ),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(14),
+                            onTap: () {
+                              attendanceExportXlsx(context, asistencias);
+                            },
+                            child: const Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.sim_card_download,
+                                  color: Colors.white,
+                                ),
+                                SizedBox(width: 10),
+                                Text(
+                                  "Excel",
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 20),
-                    attendanceTable(context, asistencias, _showExitDialog,
-                        _showJustifyDialog),
-                  ],
+                      const SizedBox(height: 20),
+                      attendanceTable(
+                          context,
+                          asistencias,
+                          _showExitDialog,
+                          _showJustifyDialog,
+                          _showRegisterJustification,
+                          _showViewJustification),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -542,7 +650,9 @@ Widget attendanceTable(
     BuildContext context,
     List<Asistencia> attendance,
     Function(BuildContext, Asistencia) onExitPressed,
-    Function(BuildContext, Asistencia) onJustifyPressed) {
+    Function(BuildContext, Asistencia) onJustifyPressed,
+    Function(BuildContext, Asistencia) onRegisterJustification,
+    Function(BuildContext, Asistencia) showViewJustification) {
   return SingleChildScrollView(
     scrollDirection: Axis.horizontal,
     // Scroll horizontal para evitar desbordamiento
@@ -601,10 +711,16 @@ Widget attendanceTable(
             DataCell(
               Center(
                 child: Icon(
-                  asistencia.asistencia == 1
-                      ? Icons.check_circle
-                      : Icons.cancel,
-                  color: asistencia.asistencia == 1 ? Colors.green : Colors.red,
+                  asistencia.asiTieneJustificacion == 2
+                      ? Icons.info_outline // Icono de información para permisos
+                      : asistencia.asistencia == 1
+                          ? Icons.check_circle
+                          : Icons.cancel,
+                  color: asistencia.asiTieneJustificacion == 2
+                      ? Colors.orange
+                      : (asistencia.asistencia == 1
+                          ? Colors.green
+                          : Colors.red),
                 ),
               ),
             ),
@@ -624,48 +740,44 @@ Widget attendanceTable(
             )),
             DataCell(Row(
               children: <Widget>[
-                // if (Utils.isToday(asistencia.asiFechaSalida))
-                //   asistencia.asiFechaSalida == null
-                //       ? IconButton(
-                //           onPressed: () => onExitPressed(context, asistencia),
-                //           icon: const Icon(
-                //             Icons.exit_to_app,
-                //             color: Colors.indigo,
-                //           ),
-                //         )
-                //       : IconButton(
-                //           onPressed: () =>
-                //               onJustifyPressed(context, asistencia),
-                //           icon: const Icon(
-                //             Icons.mark_chat_unread,
-                //             color: Colors.teal,
-                //           ),
-                //         )
-                // else
-                //   const SizedBox(
-                //       width: 48,
-                //       child: Icon(Icons.history, color: Colors.grey, size: 20)),
                 if (asistencia.asiFechaAsistencia != null)
                   asistencia.asiFechaSalida == null
                       ? IconButton(
-                    onPressed: () => onExitPressed(context, asistencia),
-                    icon: const Icon(
-                      Icons.exit_to_app,
-                      color: Colors.indigo,
-                    ),
-                  )
+                          onPressed: () => onExitPressed(context, asistencia),
+                          icon: const Icon(
+                            Icons.exit_to_app,
+                            color: Colors.indigo,
+                          ),
+                        )
                       : IconButton(
-                    onPressed: () =>
-                        onJustifyPressed(context, asistencia),
-                    icon: const Icon(
-                      Icons.mark_chat_unread,
-                      color: Colors.teal,
-                    ),
-                  )
+                          onPressed: () =>
+                              onJustifyPressed(context, asistencia),
+                          icon: const Icon(
+                            Icons.mark_chat_unread,
+                            color: Colors.teal,
+                          ),
+                        )
                 else
                   const SizedBox(
                       width: 48,
                       child: Icon(Icons.history, color: Colors.grey, size: 20)),
+                if (asistencia.asiTieneJustificacion == 2)
+                  IconButton(
+                    icon: const Icon(
+                      Icons.edit_note,
+                      color: Colors.orange,
+                    ),
+                    onPressed: () => showViewJustification(context, asistencia),
+                  )
+                else
+                  IconButton(
+                    onPressed: () =>
+                        onRegisterJustification(context, asistencia),
+                    icon: const Icon(
+                      Icons.gas_meter,
+                      color: Colors.indigoAccent,
+                    ),
+                  )
               ],
             ))
           ]);

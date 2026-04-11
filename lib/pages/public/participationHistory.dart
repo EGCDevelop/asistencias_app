@@ -33,13 +33,14 @@ class _ParticipationHistoryState extends State<ParticipationHistory> {
     if (matrixData.isEmpty) return [];
     return matrixData.first.keys
         .where((key) =>
-    key != "Escuadra" &&
-        key != "Puesto" &&
-        key != "NombreCompleto" &&
-        key != "Asistio" && // Omitir de la zona de iconos
-        key != "Falta" &&
-        key != "Tarde" &&
-        key != "NA")
+            key != "Escuadra" &&
+            key != "Puesto" &&
+            key != "NombreCompleto" &&
+            key != "Asistio" &&
+            key != "Falta" &&
+            key != "Tarde" &&
+            key != "Permisos" &&
+            key != "NA")
         .toList();
   }
 
@@ -88,15 +89,16 @@ class _ParticipationHistoryState extends State<ParticipationHistory> {
       if (userEscuadraId == 1 || userEscuadraId == 12) {
         squads = response
             .where((e) =>
-        e.escIdEscuadra == userEscuadraId || e.escIdEscuadra == 14)
+                e.escIdEscuadra == userEscuadraId || e.escIdEscuadra == 14)
             .toList();
       } else if (userEscuadraId == 2 || userEscuadraId == 13) {
         squads = response
             .where((e) =>
-        e.escIdEscuadra == userEscuadraId || e.escIdEscuadra == 15)
+                e.escIdEscuadra == userEscuadraId || e.escIdEscuadra == 15)
             .toList();
       } else if (userEscuadraId == 11) {
-        Escuadras general = Escuadras(escIdEscuadra: 11, escNombre: "Generales");
+        Escuadras general =
+            Escuadras(escIdEscuadra: 11, escNombre: "Generales");
         squads.add(general);
         squads = response;
       } else {
@@ -106,12 +108,12 @@ class _ParticipationHistoryState extends State<ParticipationHistory> {
 
       if (userEscuadraId == 11) {
         squadSelected = response.firstWhere(
-              (e) => e.escIdEscuadra == 1,
+          (e) => e.escIdEscuadra == 1,
           orElse: () => response.first,
         );
       } else {
         squadSelected = response.firstWhere(
-              (e) => e.escIdEscuadra == userEscuadraId,
+          (e) => e.escIdEscuadra == userEscuadraId,
           orElse: () => response.first,
         );
       }
@@ -148,198 +150,203 @@ class _ParticipationHistoryState extends State<ParticipationHistory> {
           canPop: true,
           child: Scaffold(
             appBar: const CustomAppBar(title: 'Historial de Asistencias'),
-            body: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                child: Column(
-                  children: <Widget>[
-                    Row(
-                      children: <Widget>[
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                "Escuadra",
-                                style: TextStyle(
+            body: RefreshIndicator(
+              color: Colors.white,
+              backgroundColor: Colors.black,
+              onRefresh: _loadMatriz,
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  child: Column(
+                    children: <Widget>[
+                      Row(
+                        children: <Widget>[
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  "Escuadra",
+                                  style: TextStyle(
+                                      color: Colors.black,
+                                      fontWeight: FontWeight.w400),
+                                ),
+                                Container(
+                                  width: double.infinity,
+                                  decoration: BoxDecoration(
                                     color: Colors.black,
-                                    fontWeight: FontWeight.w400),
-                              ),
-                              Container(
-                                width: double.infinity,
-                                decoration: BoxDecoration(
-                                  color: Colors.black,
-                                  borderRadius: BorderRadius.circular(5),
-                                ),
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 16),
-                                child: Row(
-                                  children: <Widget>[
-                                    Expanded(
-                                      child: DropdownButton<Escuadras>(
-                                        isExpanded: true,
-                                        value: squadSelected,
-                                        onChanged: (Escuadras? newValue) {
-                                          setState(() {
-                                            squadSelected = newValue;
-                                          });
-                                          _loadMatriz();
-                                        },
-                                        items: squads.map((esc) {
-                                          return DropdownMenuItem<Escuadras>(
-                                            value: esc,
-                                            child: Align(
-                                              alignment: Alignment.centerLeft,
-                                              child: Text(
-                                                esc.escNombre,
-                                                style: const TextStyle(
-                                                    color: Colors.white),
+                                    borderRadius: BorderRadius.circular(5),
+                                  ),
+                                  padding:
+                                      const EdgeInsets.symmetric(horizontal: 16),
+                                  child: Row(
+                                    children: <Widget>[
+                                      Expanded(
+                                        child: DropdownButton<Escuadras>(
+                                          isExpanded: true,
+                                          value: squadSelected,
+                                          onChanged: (Escuadras? newValue) {
+                                            setState(() {
+                                              squadSelected = newValue;
+                                            });
+                                            _loadMatriz();
+                                          },
+                                          items: squads.map((esc) {
+                                            return DropdownMenuItem<Escuadras>(
+                                              value: esc,
+                                              child: Align(
+                                                alignment: Alignment.centerLeft,
+                                                child: Text(
+                                                  esc.escNombre,
+                                                  style: const TextStyle(
+                                                      color: Colors.white),
+                                                ),
                                               ),
-                                            ),
-                                          );
-                                        }).toList(),
-                                        style: const TextStyle(
-                                            color: Colors.white),
-                                        dropdownColor: Colors.black,
-                                        underline: Container(),
-                                      ),
-                                    )
-                                  ],
+                                            );
+                                          }).toList(),
+                                          style: const TextStyle(
+                                              color: Colors.white),
+                                          dropdownColor: Colors.black,
+                                          underline: Container(),
+                                        ),
+                                      )
+                                    ],
+                                  ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                "Estado",
-                                style: TextStyle(
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  "Estado",
+                                  style: TextStyle(
+                                      color: Colors.black,
+                                      fontWeight: FontWeight.w400),
+                                ),
+                                Container(
+                                  width: double.infinity,
+                                  decoration: BoxDecoration(
                                     color: Colors.black,
-                                    fontWeight: FontWeight.w400),
-                              ),
-                              Container(
-                                width: double.infinity,
-                                decoration: BoxDecoration(
-                                  color: Colors.black,
-                                  borderRadius: BorderRadius.circular(5),
-                                ),
-                                padding:
-                                const EdgeInsets.symmetric(horizontal: 16),
-                                child: Row(
-                                  children: <Widget>[
-                                    Expanded(
-                                      child: DropdownButton<int>(
-                                        isExpanded: true,
-                                        value: memberType,
-                                        onChanged: (int? value) {
-                                          setState(() {
-                                            memberType = value!;
-                                          });
-                                          _loadMatriz();
-                                        },
-                                        items: news.map((newsItem) {
-                                          return DropdownMenuItem<int>(
-                                            value: newsItem["id"],
-                                            child: Align(
-                                              alignment: Alignment.centerLeft,
-                                              child: Text(
-                                                newsItem["name"],
-                                                style: const TextStyle(
-                                                    color: Colors.white),
+                                    borderRadius: BorderRadius.circular(5),
+                                  ),
+                                  padding:
+                                      const EdgeInsets.symmetric(horizontal: 16),
+                                  child: Row(
+                                    children: <Widget>[
+                                      Expanded(
+                                        child: DropdownButton<int>(
+                                          isExpanded: true,
+                                          value: memberType,
+                                          onChanged: (int? value) {
+                                            setState(() {
+                                              memberType = value!;
+                                            });
+                                            _loadMatriz();
+                                          },
+                                          items: news.map((newsItem) {
+                                            return DropdownMenuItem<int>(
+                                              value: newsItem["id"],
+                                              child: Align(
+                                                alignment: Alignment.centerLeft,
+                                                child: Text(
+                                                  newsItem["name"],
+                                                  style: const TextStyle(
+                                                      color: Colors.white),
+                                                ),
                                               ),
-                                            ),
-                                          );
-                                        }).toList(),
-                                        style: const TextStyle(
-                                            color: Colors.white),
-                                        dropdownColor: Colors.black,
-                                        underline: Container(),
-                                      ),
-                                    )
-                                  ],
+                                            );
+                                          }).toList(),
+                                          style: const TextStyle(
+                                              color: Colors.white),
+                                          dropdownColor: Colors.black,
+                                          underline: Container(),
+                                        ),
+                                      )
+                                    ],
+                                  ),
                                 ),
-                              ),
-                            ],
-                          ),
-                        )
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    Row(
-                      children: <Widget>[
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                "Puesto",
-                                style: TextStyle(
+                              ],
+                            ),
+                          )
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      Row(
+                        children: <Widget>[
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  "Puesto",
+                                  style: TextStyle(
+                                      color: Colors.black,
+                                      fontWeight: FontWeight.w400),
+                                ),
+                                Container(
+                                  width: double.infinity,
+                                  decoration: BoxDecoration(
                                     color: Colors.black,
-                                    fontWeight: FontWeight.w400),
-                              ),
-                              Container(
-                                width: double.infinity,
-                                decoration: BoxDecoration(
-                                  color: Colors.black,
-                                  borderRadius: BorderRadius.circular(5),
-                                ),
-                                padding:
-                                const EdgeInsets.symmetric(horizontal: 16),
-                                child: Row(
-                                  children: <Widget>[
-                                    Expanded(
-                                      child: DropdownButton<int>(
-                                        isExpanded: true,
-                                        value: position,
-                                        onChanged: (int? value) {
-                                          setState(() {
-                                            position = value!;
-                                          });
-                                          _loadMatriz();
-                                        },
-                                        items: positionsList.map((newsItem) {
-                                          return DropdownMenuItem<int>(
-                                            value: newsItem["id"],
-                                            child: Align(
-                                              alignment: Alignment.centerLeft,
-                                              child: Text(
-                                                newsItem["name"],
-                                                style: const TextStyle(
-                                                    color: Colors.white),
+                                    borderRadius: BorderRadius.circular(5),
+                                  ),
+                                  padding:
+                                      const EdgeInsets.symmetric(horizontal: 16),
+                                  child: Row(
+                                    children: <Widget>[
+                                      Expanded(
+                                        child: DropdownButton<int>(
+                                          isExpanded: true,
+                                          value: position,
+                                          onChanged: (int? value) {
+                                            setState(() {
+                                              position = value!;
+                                            });
+                                            _loadMatriz();
+                                          },
+                                          items: positionsList.map((newsItem) {
+                                            return DropdownMenuItem<int>(
+                                              value: newsItem["id"],
+                                              child: Align(
+                                                alignment: Alignment.centerLeft,
+                                                child: Text(
+                                                  newsItem["name"],
+                                                  style: const TextStyle(
+                                                      color: Colors.white),
+                                                ),
                                               ),
-                                            ),
-                                          );
-                                        }).toList(),
-                                        style: const TextStyle(
-                                            color: Colors.white),
-                                        dropdownColor: Colors.black,
-                                        underline: Container(),
-                                      ),
-                                    )
-                                  ],
+                                            );
+                                          }).toList(),
+                                          style: const TextStyle(
+                                              color: Colors.white),
+                                          dropdownColor: Colors.black,
+                                          underline: Container(),
+                                        ),
+                                      )
+                                    ],
+                                  ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 16),
-                        const Expanded(child: SizedBox()),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-                    if (matrixData.isNotEmpty) ...[
-                      _buildAttendanceLegend(),
-                      _buildTable(),
-                      _buildPaginationControls(),
-                    ] else if (!_isLoading)
-                      const Text("No hay datos disponibles",
-                          style: TextStyle(color: Colors.white)),
-                  ],
+                          const SizedBox(width: 16),
+                          const Expanded(child: SizedBox()),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                      if (matrixData.isNotEmpty) ...[
+                        _buildAttendanceLegend(),
+                        _buildTable(),
+                        _buildPaginationControls(),
+                      ] else if (!_isLoading)
+                        const Text("No hay datos disponibles",
+                            style: TextStyle(color: Colors.white)),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -371,7 +378,7 @@ class _ParticipationHistoryState extends State<ParticipationHistory> {
     return Container(
       width: 150,
       decoration: const BoxDecoration(
-        color: Colors.black, // Color principal
+        color: Colors.black,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -397,14 +404,21 @@ class _ParticipationHistoryState extends State<ParticipationHistory> {
         // --- FILA DE ENCABEZADOS (HEADERS) ---
         Row(
           children: [
-            // 1. Los 4 encabezados de totales primero
-            _buildCell("Asist.", isHeader: true, width: totalWidth, color: Colors.green),
-            _buildCell("Falt.", isHeader: true, width: totalWidth, color: Colors.red),
-            _buildCell("Tard.", isHeader: true, width: totalWidth, color: Colors.orange),
-            _buildCell("N/A", isHeader: true, width: totalWidth, color: Colors.grey),
+            //Los 4 encabezados de totales primero
+            _buildCell("Asist.",
+                isHeader: true, width: totalWidth, color: Colors.green),
+            _buildCell("Tard.",
+                isHeader: true, width: totalWidth, color: Colors.orange),
+            _buildCell("Perm.",
+                isHeader: true, width: totalWidth, color: Colors.blueAccent),
+            _buildCell("Falt.",
+                isHeader: true, width: totalWidth, color: Colors.red),
+            _buildCell("N/A",
+                isHeader: true, width: totalWidth, color: Colors.grey),
 
-            // 2. Luego los nombres de los eventos dinámicos
-            ..._eventColumns.map((e) => _buildCell(e, isHeader: true, width: 120)),
+            //Luego los nombres de los eventos dinámicos
+            ..._eventColumns
+                .map((e) => _buildCell(e, isHeader: true, width: 120)),
           ],
         ),
 
@@ -412,13 +426,19 @@ class _ParticipationHistoryState extends State<ParticipationHistory> {
         ..._paginatedData.map((row) {
           return Row(
             children: [
-              // 1. Los 4 valores de totales (sacados del SP)
-              _buildCell(row["Asistio"]?.toString() ?? "0", width: totalWidth, isHeader: true),
-              _buildCell(row["Falta"]?.toString() ?? "0", width: totalWidth, isHeader: true),
-              _buildCell(row["Tarde"]?.toString() ?? "0", width: totalWidth, isHeader: true),
-              _buildCell(row["NA"]?.toString() ?? "0", width: totalWidth, isHeader: true),
+              //Los 4 valores de totales (sacados del SP)
+              _buildCell(row["Asistio"]?.toString() ?? "0",
+                  width: totalWidth, isHeader: true),
+              _buildCell(row["Tarde"]?.toString() ?? "0",
+                  width: totalWidth, isHeader: true),
+              _buildCell(row["Permisos"]?.toString() ?? "0",
+                  width: totalWidth, isHeader: true),
+              _buildCell(row["Falta"]?.toString() ?? "0",
+                  width: totalWidth, isHeader: true),
+              _buildCell(row["NA"]?.toString() ?? "0",
+                  width: totalWidth, isHeader: true),
 
-              // 2. Luego los iconos de estado de los eventos
+              //Luego los iconos de estado de los eventos
               ..._eventColumns.map((event) => _buildStatusCell(row[event])),
             ],
           );
@@ -454,21 +474,21 @@ class _ParticipationHistoryState extends State<ParticipationHistory> {
     Color iconColor;
 
     switch (status.toString()) {
-      case '1': // Asistió [cite: 2]
+      case '1': // Asistió
         icon = Icons.check_circle;
         iconColor = Colors.green;
         break;
-      case '2': // No asistió [cite: 1]
+      case '2': // No asistió
         icon = Icons.cancel;
         iconColor = Colors.red;
         break;
-      case '3': // N/A (Solo comandantes) [cite: 3, 6, 8]
+      case '3': // N/A (Solo comandantes)
         icon = Icons.remove_circle_outline;
         iconColor = Colors.grey;
         break;
-      case '4': // Tarde
-        icon = Icons.watch_later;
-        iconColor = Colors.orange;
+      case '5': // Tarde
+        icon = Icons.flag;
+        iconColor = Colors.blueAccent;
         break;
       default:
         icon = Icons.help_outline;
@@ -583,14 +603,14 @@ class _ParticipationHistoryState extends State<ParticipationHistory> {
             ),
           ),
           const SizedBox(height: 16),
-          // Usamos Row con MainAxisAlignment.spaceEvenly para distribuir los 4 estados
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _legendItemVertical(Icons.check_circle, Colors.green, "Asistió"),
-              _legendItemVertical(Icons.cancel, Colors.red, "Falta"),
               _legendItemVertical(Icons.watch_later, Colors.orange, "Tarde"),
+              _legendItemVertical(Icons.flag, Colors.blueAccent, "Permiso"),
+              _legendItemVertical(Icons.cancel, Colors.red, "Falta"),
               _legendItemVertical(
                   Icons.remove_circle_outline, Colors.grey, "N/A"),
             ],

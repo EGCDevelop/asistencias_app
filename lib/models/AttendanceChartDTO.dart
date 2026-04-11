@@ -3,6 +3,7 @@ class AttendanceChartDTO {
   final String escNombre;
   final int totalIntegrantes;
   final int asistencias;
+  final int permisos;
   final int faltan;
   final int eventoId;
   final String nombreEvento;
@@ -12,6 +13,7 @@ class AttendanceChartDTO {
     required this.escNombre,
     required this.totalIntegrantes,
     required this.asistencias,
+    required this.permisos,
     required this.faltan,
     required this.eventoId,
     required this.nombreEvento,
@@ -23,6 +25,7 @@ class AttendanceChartDTO {
       escNombre: json['escNombre'],
       totalIntegrantes: json['totalIntegrantes'],
       asistencias: json['asistencias'],
+      permisos: json["permisos"],
       faltan: json['faltan'],
       eventoId: json['eventoId'],
       nombreEvento: json['nombreEvento'],
@@ -35,6 +38,7 @@ class AttendanceChartDTO {
       'escNombre': escNombre,
       'totalIntegrantes': totalIntegrantes,
       'asistencias': asistencias,
+      'permisos': permisos,
       'faltan': faltan,
       'eventoId': eventoId,
       'nombreEvento': nombreEvento,

@@ -13,6 +13,9 @@ class Asistencia {
   final String? asiFechaSalida;
   final String? asiUsuarioSalida;
   final String? asiComentarioSalida;
+  final String? asiJustificacionFalta;
+  final int? asiTieneJustificacion;
+  final String? asiUsuarioRegistroJustificacion;
 
   Asistencia(
       {required this.intIdIntegrante,
@@ -28,7 +31,10 @@ class Asistencia {
       this.asiFechaRegistroExtraordinaria,
       this.asiFechaSalida,
       this.asiUsuarioSalida,
-      this.asiComentarioSalida});
+      this.asiComentarioSalida,
+      this.asiJustificacionFalta,
+      this.asiTieneJustificacion,
+      this.asiUsuarioRegistroJustificacion});
 
   factory Asistencia.fromJson(Map<String, dynamic> json) {
     return Asistencia(
@@ -46,6 +52,9 @@ class Asistencia {
       asiFechaSalida: json['asiFechaSalida'],
       asiUsuarioSalida: json['asiUsuarioSalida'],
       asiComentarioSalida: json['asiComentarioSalida'],
+      asiJustificacionFalta: json['asiJustificacionFalta'],
+      asiTieneJustificacion: json['asiTieneJustificacion'],
+      asiUsuarioRegistroJustificacion: json['asiUsuarioRegistroJustificacion'],
     );
   }
 }
