@@ -67,11 +67,23 @@ class _MembersState extends State<Members> {
             estNombreEstablecimiento: "Todos", estIdEstablecimiento: 0));
 
     setState(() {
+      // 1 - orion | 12 - fenix => add 14 - Aspirante Gastadores
       if (userEscuadraId == 1 || userEscuadraId == 12) {
         escuadras = squads.where((e) => e.escIdEscuadra == userEscuadraId || e.escIdEscuadra == 14).toList();
-      } else if (userEscuadraId == 2 || userEscuadraId == 13) {
+      }
+      // 2 - Batonistas A | 13 - Batonistas B => 15 - Aspirante Batonistas
+      else if (userEscuadraId == 2 || userEscuadraId == 13) {
         escuadras = squads.where((e) => e.escIdEscuadra == userEscuadraId || e.escIdEscuadra == 15).toList();
-      } else if (userEscuadraId == 11) {
+      }
+      // 4 - Xilofonos
+      else if (userEscuadraId == 4){
+        escuadras = squads.where((e) => e.escIdEscuadra == userEscuadraId || e.escIdEscuadra == 5).toList();
+      }
+      // 5 - Liras
+      else if (userEscuadraId == 5){
+        escuadras = squads.where((e) => e.escIdEscuadra == userEscuadraId || e.escIdEscuadra == 4).toList();
+      }
+      else if (userEscuadraId == 11) {
         escuadras = squads;
       } else {
         escuadras = squads.where((e) => e.escIdEscuadra == userEscuadraId).toList();

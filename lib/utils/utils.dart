@@ -1,7 +1,7 @@
 import 'package:intl/intl.dart';
 
 class Utils {
-  static const String APP_VERSION = '1.3.0';
+  static const String APP_VERSION = '1.3.1';
 
   static String formatDate(String dateString) {
     DateTime parsedDate = DateTime.parse(dateString);
@@ -12,6 +12,7 @@ class Utils {
     switch (squadId) {
       case 1:
         return 'General';
+
       case 2:
         return 'Sub-General';
       case 3:

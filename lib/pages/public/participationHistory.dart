@@ -96,7 +96,16 @@ class _ParticipationHistoryState extends State<ParticipationHistory> {
             .where((e) =>
                 e.escIdEscuadra == userEscuadraId || e.escIdEscuadra == 15)
             .toList();
-      } else if (userEscuadraId == 11) {
+      }
+      // 4 - Xilofonos
+      else if (userEscuadraId == 4){
+        squads = response.where((e) => e.escIdEscuadra == userEscuadraId || e.escIdEscuadra == 5).toList();
+      }
+      // 5 - Liras
+      else if (userEscuadraId == 5){
+        squads = response.where((e) => e.escIdEscuadra == userEscuadraId || e.escIdEscuadra == 4).toList();
+      }
+      else if (userEscuadraId == 11) {
         Escuadras general =
             Escuadras(escIdEscuadra: 11, escNombre: "Generales");
         squads.add(general);
