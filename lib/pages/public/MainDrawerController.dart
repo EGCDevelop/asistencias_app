@@ -3,6 +3,7 @@ import 'package:asistencias_egc/pages/events/events.dart';
 import 'package:asistencias_egc/pages/members/members.dart';
 import 'package:asistencias_egc/pages/public/MenuLateral.dart';
 import 'package:asistencias_egc/pages/public/attendance.dart';
+import 'package:asistencias_egc/pages/attendance/attendanceV2.dart';
 import 'package:asistencias_egc/pages/public/participationHistory.dart';
 import 'package:asistencias_egc/pages/scanner/scanner_event.dart';
 import 'package:asistencias_egc/provider/AuthProvider.dart';
@@ -50,7 +51,8 @@ class _MainDrawerControllerState extends State<MainDrawerController> {
   Widget _getScreen() {
     switch (currentScreen) {
       case 'scanner_event': return const ScannerEvent();
-      case 'attendance': return const Attendance();
+      //case 'attendance': return const Attendance();
+      case 'attendance': return const AttendanceV2();
       case 'event': return const Events();
       case 'members': return const Members();
       case 'attendance_char': return const AttendanceChar();

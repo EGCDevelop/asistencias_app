@@ -14,15 +14,13 @@ class MenuLateral extends StatelessWidget {
     var authProvider = Provider.of<AuthProvider>(context);
     var user = authProvider.user;
     List<String> firstName = user!.nombres.split(" ");
-    List<String> lastName = user!.apellidos.split(" ");
+    List<String> lastName = user.apellidos.split(" ");
     String titleName = "${firstName[0]} ${lastName[0]}";
 
     final List<Map<String, dynamic>> allMenuItems = [
       {'title': 'Tomar asistencia', 'icon': Icons.qr_code, 'route': 'scanner_event'},
-      {'title': 'Ver asistencia', 'icon': Icons.list_alt, 'route': 'attendance'},
       {'title': 'Eventos', 'icon': Icons.calendar_month, 'route': 'event'},
       {'title': 'Integrantes', 'icon': Icons.person, 'route': 'members'},
-      {'title': 'Gráfica', 'icon': Icons.pie_chart, 'route': 'attendance_char'},
       {'title': 'Historial', 'icon': Icons.history, 'route': 'participation_history'},
     ];
 

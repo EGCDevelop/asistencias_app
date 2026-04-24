@@ -1,7 +1,7 @@
 import 'package:intl/intl.dart';
 
 class Utils {
-  static const String APP_VERSION = '1.3.1';
+  static const String APP_VERSION = '2.0.0';
 
   static String formatDate(String dateString) {
     DateTime parsedDate = DateTime.parse(dateString);
