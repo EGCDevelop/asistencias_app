@@ -160,7 +160,7 @@ class _EventFormState extends State<EventForm> {
 
       // banda general
       if (_generalBand) {
-        for (int i = 1; i < 16; i++) {
+        for (int i = 1; i < 17; i++) {
           idList.add(i);
         }
       } else {

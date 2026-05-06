@@ -4,8 +4,12 @@ import 'package:asistencias_egc/utils/api/attendance_controller.dart';
 import 'package:asistencias_egc/utils/api/general_methods_controllers.dart';
 import 'package:asistencias_egc/widgets/CustomAppBar.dart';
 import 'package:asistencias_egc/widgets/LoadingAnimation.dart';
+import 'package:asistencias_egc/widgets/animation/CustomSnackBar.dart';
+import 'package:file_saver/file_saver.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:excel/excel.dart' as excel_lib; // Agregamos el prefijo
+import 'dart:typed_data'; // De aquí sale el Uint8List
 
 class ParticipationHistory extends StatefulWidget {
   const ParticipationHistory({super.key});
@@ -31,16 +35,21 @@ class _ParticipationHistoryState extends State<ParticipationHistory> {
   // Obtener las columnas de eventos dinámicamente
   List<String> get _eventColumns {
     if (matrixData.isEmpty) return [];
+
+    const internalKeys = {
+      "Escuadra",
+      "PuestoNombre", // <--- Agregamos esta para ocultarla
+      "INTPUIdPuesto",
+      "NombreCompleto",
+      "Asistio",
+      "Falta",
+      "Tarde",
+      "Permisos",
+      "NA"
+    };
+
     return matrixData.first.keys
-        .where((key) =>
-            key != "Escuadra" &&
-            key != "Puesto" &&
-            key != "NombreCompleto" &&
-            key != "Asistio" &&
-            key != "Falta" &&
-            key != "Tarde" &&
-            key != "Permisos" &&
-            key != "NA")
+        .where((key) => !internalKeys.contains(key))
         .toList();
   }
 
@@ -87,9 +96,9 @@ class _ParticipationHistoryState extends State<ParticipationHistory> {
 
     setState(() {
       if (userEscuadraId == 1 || userEscuadraId == 12) {
+        var allowedIds = [userEscuadraId, 14, 16];
         squads = response
-            .where((e) =>
-                e.escIdEscuadra == userEscuadraId || e.escIdEscuadra == 14)
+            .where((e) => allowedIds.contains(e.escIdEscuadra))
             .toList();
       } else if (userEscuadraId == 2 || userEscuadraId == 13) {
         squads = response
@@ -98,14 +107,19 @@ class _ParticipationHistoryState extends State<ParticipationHistory> {
             .toList();
       }
       // 4 - Xilofonos
-      else if (userEscuadraId == 4){
-        squads = response.where((e) => e.escIdEscuadra == userEscuadraId || e.escIdEscuadra == 5).toList();
+      else if (userEscuadraId == 4) {
+        squads = response
+            .where((e) =>
+                e.escIdEscuadra == userEscuadraId || e.escIdEscuadra == 5)
+            .toList();
       }
       // 5 - Liras
-      else if (userEscuadraId == 5){
-        squads = response.where((e) => e.escIdEscuadra == userEscuadraId || e.escIdEscuadra == 4).toList();
-      }
-      else if (userEscuadraId == 11) {
+      else if (userEscuadraId == 5) {
+        squads = response
+            .where((e) =>
+                e.escIdEscuadra == userEscuadraId || e.escIdEscuadra == 4)
+            .toList();
+      } else if (userEscuadraId == 11) {
         Escuadras general =
             Escuadras(escIdEscuadra: 11, escNombre: "Generales");
         squads.add(general);
@@ -151,6 +165,99 @@ class _ParticipationHistoryState extends State<ParticipationHistory> {
     }
   }
 
+  Future<void> exportAttendanceMatrixToXlsx(BuildContext context) async {
+    bool success = false;
+    setState(() => _isLoading = true);
+
+    try {
+      // 1. Inicializar Excel con prefijo para evitar conflictos de estilo
+      final excel = excel_lib.Excel.createExcel();
+      final excel_lib.Sheet sheet = excel["Asistencias"];
+      excel.delete('Sheet1');
+
+      if (matrixData.isEmpty) throw Exception("Sin datos");
+
+      var headerStyle = excel_lib.CellStyle(bold: true);
+
+      // 2. Definir todos los encabezados (incluyendo PuestoNombre)
+      List<String> headers = matrixData.first.keys.toList();
+      sheet.appendRow(headers.map((e) => excel_lib.TextCellValue(e)).toList());
+
+      for (var i = 0; i < headers.length; i++) {
+        var cell = sheet.cell(excel_lib.CellIndex.indexByColumnRow(columnIndex: i, rowIndex: 0));
+        cell.cellStyle = headerStyle;
+      }
+
+      String getStatusText(dynamic value) {
+        switch (value.toString()) {
+          case '1': return "Asistió";
+          case '2': return "Faltó";
+          case '3': return "N/A";
+          case '4': return "Tarde";
+          case '5': return "Permiso";
+          default: return value?.toString() ?? "";
+        }
+      }
+
+      // Dentro de tu función, antes del bucle de filas
+      int totalFilas = matrixData.length;
+      int totalColumnas = matrixData.isNotEmpty ? matrixData.first.keys.length : 0;
+      int totalCeldas = totalFilas * totalColumnas;
+
+      debugPrint("Exportando $totalFilas integrantes con $totalColumnas columnas cada uno.");
+      debugPrint("Total de celdas a procesar: $totalCeldas");
+
+      for (var row in matrixData) {
+        List<excel_lib.CellValue> rowData = [];
+        for (var key in headers) {
+          var value = row[key];
+
+          // Identificar si es columna de evento para traducir el número a texto[cite: 1, 2]
+          bool isEventColumn = ![
+            "NombreCompleto", "Escuadra", "PuestoNombre",
+            "Asistio", "Falta", "Tarde", "Permisos", "NA"
+          ].contains(key);
+
+          if (isEventColumn) {
+            rowData.add(excel_lib.TextCellValue(getStatusText(value)));
+          } else {
+            rowData.add(excel_lib.TextCellValue(value?.toString() ?? ""));
+          }
+        }
+        sheet.appendRow(rowData);
+      }
+
+      final fileBytes = excel.encode();
+
+      if (fileBytes != null) {
+        Uint8List uint8List = Uint8List.fromList(fileBytes);
+
+        await FileSaver.instance.saveAs(
+          name: 'Reporte_Matriz_${DateTime.now().millisecondsSinceEpoch}',
+          bytes: uint8List,
+          ext: 'xlsx',
+          mimeType: MimeType.microsoftExcel,
+        );
+        success = true;
+      }
+    } catch (e) {
+      debugPrint("Error exportando matriz: $e");
+      success = false;
+    } finally {
+      setState(() => _isLoading = false);
+
+      // Usar tu CustomSnackBar[cite: 2]
+      CustomSnackBar.show(
+        context,
+        success: success,
+        message: success
+            ? "Archivo descargado correctamente en Descargas."
+            : "Error al generar el archivo.",
+      );
+    }
+  }
+
+
   @override
   Widget build(BuildContext context) {
     return Stack(
@@ -158,7 +265,29 @@ class _ParticipationHistoryState extends State<ParticipationHistory> {
         PopScope(
           canPop: true,
           child: Scaffold(
-            appBar: const CustomAppBar(title: 'Historial de Asistencias'),
+            appBar: CustomAppBar(
+              title: 'Historial de Asistencias',
+              actions: [
+                PopupMenuButton<int>(
+                  icon: const Icon(Icons.more_vert, color: Colors.black),
+                  onSelected: (value) {
+                    if (value == 1) exportAttendanceMatrixToXlsx(context);
+                  },
+                  itemBuilder: (context) => [
+                    const PopupMenuItem(
+                      value: 1,
+                      child: Row(
+                        children: [
+                          Icon(Icons.file_download, color: Colors.black),
+                          SizedBox(width: 8),
+                          Text("Exportar Excel"),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
             body: RefreshIndicator(
               color: Colors.white,
               backgroundColor: Colors.black,
@@ -187,8 +316,8 @@ class _ParticipationHistoryState extends State<ParticipationHistory> {
                                     color: Colors.black,
                                     borderRadius: BorderRadius.circular(5),
                                   ),
-                                  padding:
-                                      const EdgeInsets.symmetric(horizontal: 16),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 16),
                                   child: Row(
                                     children: <Widget>[
                                       Expanded(
@@ -243,8 +372,8 @@ class _ParticipationHistoryState extends State<ParticipationHistory> {
                                     color: Colors.black,
                                     borderRadius: BorderRadius.circular(5),
                                   ),
-                                  padding:
-                                      const EdgeInsets.symmetric(horizontal: 16),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 16),
                                   child: Row(
                                     children: <Widget>[
                                       Expanded(
@@ -303,8 +432,8 @@ class _ParticipationHistoryState extends State<ParticipationHistory> {
                                     color: Colors.black,
                                     borderRadius: BorderRadius.circular(5),
                                   ),
-                                  padding:
-                                      const EdgeInsets.symmetric(horizontal: 16),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 16),
                                   child: Row(
                                     children: <Widget>[
                                       Expanded(

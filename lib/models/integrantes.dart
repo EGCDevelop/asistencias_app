@@ -23,33 +23,40 @@ class Integrantes {
   final String puNombre;
   final int complicacionMedica;
   final String? descripcionComplicacionMedica;
+  final int perteneceALinea;
+  final int tipoLinea;
+  final int encargadoLinea;
+  final int categoria;
 
-  Integrantes({
-    required this.intIdIntegrante,
-    required this.intNombres,
-    required this.intApellidos,
-    required this.intTelefono,
-    required this.intestIdEstablecimiento,
-    required this.estNombreEstablecimiento,
-    required this.intEstablecimientoNombre,
-    required this.intcarIdCarrera,
-    required this.carNombreCarrera,
-    required this.intCarreraNombre,
-    required this.intgraIdGrado,
-    required this.graNombreGrado,
-    required this.intGradoNombre,
-    required this.intSeccion,
-    required this.intescIdEscuadra,
-    required this.escNombre,
-    required this.intEsNuevo,
-    required this.intNombreEncargado,
-    required this.intTelefonoEncargado,
-    required this.intEstadoIntegrante,
-    required this.intpuIdPuesto,
-    required this.puNombre,
-    required this.complicacionMedica,
-    this.descripcionComplicacionMedica
-  });
+  Integrantes(
+      {required this.intIdIntegrante,
+      required this.intNombres,
+      required this.intApellidos,
+      required this.intTelefono,
+      required this.intestIdEstablecimiento,
+      required this.estNombreEstablecimiento,
+      required this.intEstablecimientoNombre,
+      required this.intcarIdCarrera,
+      required this.carNombreCarrera,
+      required this.intCarreraNombre,
+      required this.intgraIdGrado,
+      required this.graNombreGrado,
+      required this.intGradoNombre,
+      required this.intSeccion,
+      required this.intescIdEscuadra,
+      required this.escNombre,
+      required this.intEsNuevo,
+      required this.intNombreEncargado,
+      required this.intTelefonoEncargado,
+      required this.intEstadoIntegrante,
+      required this.intpuIdPuesto,
+      required this.puNombre,
+      required this.complicacionMedica,
+      this.descripcionComplicacionMedica,
+      required this.perteneceALinea,
+      required this.tipoLinea,
+      required this.encargadoLinea,
+      required this.categoria});
 
   factory Integrantes.fromJson(Map<String, dynamic> json) {
     return Integrantes(
@@ -76,7 +83,11 @@ class Integrantes {
       intpuIdPuesto: json['intpuIdPuesto'],
       puNombre: json['puNombre'],
       complicacionMedica: json['complicacionMedica'],
-      descripcionComplicacionMedica: json['descripcionComplicacionMedica']
+      descripcionComplicacionMedica: json['descripcionComplicacionMedica'],
+      perteneceALinea: json["perteneceALinea"],
+      tipoLinea: json["tipoLinea"],
+      encargadoLinea: json["encargadoLinea"],
+      categoria: json['categoria'],
     );
   }
 
@@ -104,6 +115,10 @@ class Integrantes {
       'intEstadoIntegrante': intEstadoIntegrante,
       'intpuIdPuesto': intpuIdPuesto,
       'puNombre': puNombre,
+      "perteneceALinea": perteneceALinea,
+      "tipoLinea": tipoLinea,
+      "encargadoLinea": encargadoLinea,
+      'categoria': categoria
     };
   }
 }

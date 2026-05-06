@@ -69,7 +69,8 @@ class _MembersState extends State<Members> {
     setState(() {
       // 1 - orion | 12 - fenix => add 14 - Aspirante Gastadores
       if (userEscuadraId == 1 || userEscuadraId == 12) {
-        escuadras = squads.where((e) => e.escIdEscuadra == userEscuadraId || e.escIdEscuadra == 14).toList();
+        var allowedIds = [userEscuadraId, 14, 16];
+        escuadras = squads.where((e) => allowedIds.contains(e.escIdEscuadra)).toList();
       }
       // 2 - Batonistas A | 13 - Batonistas B => 15 - Aspirante Batonistas
       else if (userEscuadraId == 2 || userEscuadraId == 13) {
@@ -133,7 +134,6 @@ class _MembersState extends State<Members> {
     );
 
     setState(() {
-      debugPrint("integrantes == ${integrantes.length}");
       _isLoading = false;
       generalData = integrantes;
     });

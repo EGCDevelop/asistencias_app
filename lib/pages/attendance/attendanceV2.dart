@@ -239,7 +239,7 @@ class _AttendanceV2State extends State<AttendanceV2> {
       final fileBytes = excel.save();
 
       if (fileBytes != null) {
-        final uint8List = Uint8List.fromList(fileBytes);
+        Uint8List uint8List = Uint8List.fromList(fileBytes);
 
         await FileSaver.instance.saveAs(
           name: 'Asistencias_${DateTime.now().millisecondsSinceEpoch}',

@@ -2,6 +2,8 @@ import 'package:asistencias_egc/models/Career.dart';
 import 'package:asistencias_egc/models/Establishment.dart';
 import 'package:asistencias_egc/models/escuadras.dart';
 import 'package:asistencias_egc/models/integrantes.dart';
+import 'package:asistencias_egc/models/login/LoginResponse.dart';
+import 'package:asistencias_egc/provider/AuthProvider.dart';
 import 'package:asistencias_egc/utils/api/Degrees.dart';
 import 'package:asistencias_egc/utils/api/Position.dart';
 import 'package:asistencias_egc/utils/api/general_methods_controllers.dart';
@@ -9,6 +11,7 @@ import 'package:asistencias_egc/utils/api/members_controller.dart';
 import 'package:asistencias_egc/widgets/CustomTextField.dart';
 import 'package:asistencias_egc/widgets/LoadingAnimation.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class MemberEdit extends StatefulWidget {
   const MemberEdit({super.key});
@@ -20,6 +23,7 @@ class MemberEdit extends StatefulWidget {
 class _MemberEditState extends State<MemberEdit> {
   final _formKey = GlobalKey<FormState>();
   int? memberId;
+  String memberUsername = "";
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _lastNameController = TextEditingController();
   final TextEditingController _cellController = TextEditingController();
@@ -44,11 +48,18 @@ class _MemberEditState extends State<MemberEdit> {
   final TextEditingController _medicalDescriptionController =
       TextEditingController(); // Controlador para la descripción
   int _selectedMedicalComplication = 2;
+  int memberCategorySelected = 2;
   bool _initialized = false;
 
   final List<Map<String, dynamic>> medicalOptions = [
     {'label': 'Sin complicaciones', 'value': 2},
     {'label': 'Con complicaciones', 'value': 1},
+  ];
+
+  final List<Map<String, dynamic>> memberCategoryId = [
+    {'label': 'Categoría A', 'value': 1},
+    {'label': 'Categoría B', 'value': 2},
+    {'label': 'Fabrica', 'value': 3},
   ];
 
   bool _isLoading = false;
@@ -61,6 +72,9 @@ class _MemberEditState extends State<MemberEdit> {
   int? initialPosition;
   int? initialDegree;
   int? initialCourse;
+  int perteneceALinea = 0;
+  int tipoLinea = 0;
+  int encargadoLinea = 0;
 
   @override
   void initState() {
@@ -88,7 +102,6 @@ class _MemberEditState extends State<MemberEdit> {
       positions = results[3] as List<Position>;
       courses = results[4] as List<Career>;
 
-      // Preselecciona el establecimiento basado en su ID
       selectedEstablecimiento = establecimientos.firstWhere(
         (est) => est.estIdEstablecimiento == initialEstablecimientoId,
         orElse: () => Establishment(
@@ -136,6 +149,8 @@ class _MemberEditState extends State<MemberEdit> {
 
     if (!_initialized) {
       final args = ModalRoute.of(context)!.settings.arguments;
+      var authProvider = Provider.of<AuthProvider>(context);
+      LoginResponse member = authProvider.user!;
 
       if (args is Integrantes) {
         memberId = args.intIdIntegrante;
@@ -158,6 +173,11 @@ class _MemberEditState extends State<MemberEdit> {
         _selectedMedicalComplication = args.complicacionMedica;
         _medicalDescriptionController.text =
             args.descripcionComplicacionMedica ?? "";
+        perteneceALinea = args.perteneceALinea;
+        tipoLinea = args.tipoLinea;
+        encargadoLinea = args.encargadoLinea;
+        memberCategorySelected = args.categoria;
+        memberUsername = args.intpuIdPuesto == 8 ? "" : member.username;
         _initialized = true;
       }
     }
@@ -190,6 +210,11 @@ class _MemberEditState extends State<MemberEdit> {
         fatherCell: _fatherCellController.text,
         complicationMedical: _selectedMedicalComplication,
         medicalComplicationDescription: _medicalDescriptionController.text,
+        tipoLinea: tipoLinea,
+        encargadoLinea: encargadoLinea,
+        perteneceALinea: perteneceALinea,
+        categoryMemberId: memberCategorySelected,
+        username: memberUsername
       );
 
       setState(() {
@@ -207,6 +232,7 @@ class _MemberEditState extends State<MemberEdit> {
 
       if (success) {
         Future.delayed(const Duration(milliseconds: 100), () {
+          ScaffoldMessenger.of(context).removeCurrentSnackBar();
           Navigator.pop(context, true);
         });
       }
@@ -304,11 +330,6 @@ class _MemberEditState extends State<MemberEdit> {
                                   child: DropdownButton<Escuadras>(
                                     isExpanded: true,
                                     value: selectedEscuadra,
-                                    /*onChanged: (Escuadras? newValue) {
-                                      setState(() {
-                                        selectedEscuadra = newValue;
-                                      });
-                                    },*/
                                     onChanged: null,
                                     items: escuadras.map((escuadra) {
                                       return DropdownMenuItem<Escuadras>(
@@ -374,6 +395,62 @@ class _MemberEditState extends State<MemberEdit> {
                               ],
                             ),
                           )
+                        ],
+                      ),
+                      const SizedBox(
+                        height: 15,
+                      ),
+                      Row(
+                        children: <Widget>[
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: <Widget>[
+                                const Text(
+                                  "Categoría",
+                                  style: TextStyle(
+                                      color: Colors.black,
+                                      fontWeight: FontWeight.w400),
+                                ),
+                                const SizedBox(height: 10),
+                                Container(
+                                  decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(10),
+                                      border: Border.all(color: Colors.black)),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 18, vertical: 5),
+                                  child: DropdownButton<int>(
+                                    isExpanded: true,
+                                    value: memberCategorySelected,
+                                    onChanged: (int? newValue) {
+                                      if (newValue != null) {
+                                        setState(() {
+                                          memberCategorySelected = newValue;
+                                        });
+                                      }
+                                    },
+                                    items: memberCategoryId.map((opt) {
+                                      return DropdownMenuItem<int>(
+                                        value: opt['value'],
+                                        child: Text(
+                                          opt['label'],
+                                          style: const TextStyle(
+                                              color: Colors.black),
+                                        ),
+                                      );
+                                    }).toList(),
+                                    dropdownColor: Colors.white,
+                                    style: const TextStyle(color: Colors.white),
+                                    underline: Container(),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(
+                            width: 10,
+                          ),
+                          //Expanded(child: SizedBox())
                         ],
                       ),
                       const SizedBox(

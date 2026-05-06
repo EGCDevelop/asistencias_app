@@ -3,14 +3,17 @@ import 'package:flutter_zoom_drawer/flutter_zoom_drawer.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
-  const CustomAppBar({super.key, required this.title});
+  final List<Widget>? actions;
+
+  const CustomAppBar({super.key, required this.title, this.actions});
 
   @override
   Widget build(BuildContext context) {
     return AppBar(
       title: Text(
         title,
-        style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+        style:
+            const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
       ),
       backgroundColor: Colors.white,
       elevation: 0,
@@ -21,6 +24,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
           ZoomDrawer.of(context)!.toggle();
         },
       ),
+      actions: actions,
     );
   }
 

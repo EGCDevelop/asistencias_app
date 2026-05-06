@@ -57,7 +57,12 @@ class MembersController {
       required String fatherName,
       required String fatherCell,
       required int complicationMedical,
-      required String medicalComplicationDescription}) async {
+      required String medicalComplicationDescription,
+      required int perteneceALinea,
+      required int tipoLinea,
+      required int encargadoLinea,
+      required int categoryMemberId,
+      required String? username}) async {
     String apiUrl = Environments.apiUrl;
     final Uri url = Uri.parse('$apiUrl/Member/update_member');
 
@@ -80,7 +85,12 @@ class MembersController {
       "fatherName": fatherName,
       "fatherCell": fatherCell,
       "complicacionMedica": complicationMedical,
-      "descripcionComplicacionMedica": medicalComplicationDescription
+      "descripcionComplicacionMedica": medicalComplicationDescription,
+      "perteneceALinea": perteneceALinea,
+      "tipoLinea": tipoLinea,
+      "encargadoLinea": encargadoLinea,
+      "categoryId": categoryMemberId,
+      "username": username
     };
 
     try {
