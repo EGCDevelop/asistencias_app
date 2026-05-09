@@ -27,6 +27,7 @@ class Integrantes {
   final int tipoLinea;
   final int encargadoLinea;
   final int categoria;
+  final String? intUsuario;
 
   Integrantes(
       {required this.intIdIntegrante,
@@ -56,39 +57,40 @@ class Integrantes {
       required this.perteneceALinea,
       required this.tipoLinea,
       required this.encargadoLinea,
-      required this.categoria});
+      required this.categoria,
+      this.intUsuario});
 
   factory Integrantes.fromJson(Map<String, dynamic> json) {
     return Integrantes(
-      intIdIntegrante: json['intIdIntegrante'],
-      intNombres: json['intNombres'],
-      intApellidos: json['intApellidos'],
-      intTelefono: json['intTelefono'],
-      intestIdEstablecimiento: json['intestIdEstablecimiento'],
-      estNombreEstablecimiento: json['estNombreEstablecimiento'],
-      intEstablecimientoNombre: json['intEstablecimientoNombre'],
-      intcarIdCarrera: json['intcarIdCarrera'],
-      carNombreCarrera: json['carNombreCarrera'],
-      intCarreraNombre: json['intCarreraNombre'],
-      intgraIdGrado: json['intgraIdGrado'],
-      graNombreGrado: json['graNombreGrado'],
-      intGradoNombre: json['intGradoNombre'],
-      intSeccion: json['intSeccion'],
-      intescIdEscuadra: json['intescIdEscuadra'],
-      escNombre: json['escNombre'],
-      intEsNuevo: json['intEsNuevo'],
-      intNombreEncargado: json['intNombreEncargado'],
-      intTelefonoEncargado: json['intTelefonoEncargado'],
-      intEstadoIntegrante: json['intEstadoIntegrante'],
-      intpuIdPuesto: json['intpuIdPuesto'],
-      puNombre: json['puNombre'],
-      complicacionMedica: json['complicacionMedica'],
-      descripcionComplicacionMedica: json['descripcionComplicacionMedica'],
-      perteneceALinea: json["perteneceALinea"],
-      tipoLinea: json["tipoLinea"],
-      encargadoLinea: json["encargadoLinea"],
-      categoria: json['categoria'],
-    );
+        intIdIntegrante: json['intIdIntegrante'],
+        intNombres: json['intNombres'],
+        intApellidos: json['intApellidos'],
+        intTelefono: json['intTelefono'],
+        intestIdEstablecimiento: json['intestIdEstablecimiento'],
+        estNombreEstablecimiento: json['estNombreEstablecimiento'],
+        intEstablecimientoNombre: json['intEstablecimientoNombre'],
+        intcarIdCarrera: json['intcarIdCarrera'],
+        carNombreCarrera: json['carNombreCarrera'],
+        intCarreraNombre: json['intCarreraNombre'],
+        intgraIdGrado: json['intgraIdGrado'],
+        graNombreGrado: json['graNombreGrado'],
+        intGradoNombre: json['intGradoNombre'],
+        intSeccion: json['intSeccion'],
+        intescIdEscuadra: json['intescIdEscuadra'],
+        escNombre: json['escNombre'],
+        intEsNuevo: json['intEsNuevo'],
+        intNombreEncargado: json['intNombreEncargado'],
+        intTelefonoEncargado: json['intTelefonoEncargado'],
+        intEstadoIntegrante: json['intEstadoIntegrante'],
+        intpuIdPuesto: json['intpuIdPuesto'],
+        puNombre: json['puNombre'],
+        complicacionMedica: json['complicacionMedica'],
+        descripcionComplicacionMedica: json['descripcionComplicacionMedica'],
+        perteneceALinea: json["perteneceALinea"],
+        tipoLinea: json["tipoLinea"],
+        encargadoLinea: json["encargadoLinea"],
+        categoria: json['categoria'],
+        intUsuario: json["intUsuario"]);
   }
 
   Map<String, dynamic> toJson() {
@@ -118,7 +120,8 @@ class Integrantes {
       "perteneceALinea": perteneceALinea,
       "tipoLinea": tipoLinea,
       "encargadoLinea": encargadoLinea,
-      'categoria': categoria
+      'categoria': categoria,
+      "intUsuario": intUsuario
     };
   }
 }

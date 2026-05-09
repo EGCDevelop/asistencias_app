@@ -22,6 +22,7 @@ class MenuLateral extends StatelessWidget {
       {'title': 'Eventos', 'icon': Icons.calendar_month, 'route': 'event'},
       {'title': 'Integrantes', 'icon': Icons.person, 'route': 'members'},
       {'title': 'Historial', 'icon': Icons.history, 'route': 'participation_history'},
+      {'title': 'Perfil', 'icon': Icons.person_pin, 'route': 'profile_page'},
     ];
 
     final menuItems = allMenuItems.where((item) {

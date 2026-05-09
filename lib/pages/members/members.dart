@@ -60,7 +60,6 @@ class _MembersState extends State<Members> {
 
     List<Establishment> establishments =
         await GeneralMethodsControllers.getEstablishment();
-    // Agregar "Todos" con ID 0 al inicio de la lista
     establishments.insert(
         0,
         Establishment(

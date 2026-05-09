@@ -116,4 +116,33 @@ class MembersController {
       return false;
     }
   }
+
+  static Future<Map<String, dynamic>?> updateMemberBiometric(
+      {required int memberId, required int biometricEnabled}) async {
+    String apiUrl = Environments.apiUrl;
+    final Uri url = Uri.parse('$apiUrl/Member/update_member_biometric');
+
+    // JSON a enviar
+    Map<String, dynamic> body = {
+      "memberId": memberId,
+      "biometricEnabled": biometricEnabled
+    };
+
+    try {
+      final response = await http.put(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(body),
+      );
+
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      } else {
+        throw Exception("Error en la petición: ${response.statusCode}");
+      }
+    } catch (e) {
+      debugPrint('Error de conexión: $e');
+      return null;
+    }
+  }
 }

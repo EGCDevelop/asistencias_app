@@ -1,6 +1,7 @@
 import 'package:asistencias_egc/pages/attendanceChar/attendance_char.dart';
 import 'package:asistencias_egc/pages/events/events.dart';
 import 'package:asistencias_egc/pages/members/members.dart';
+import 'package:asistencias_egc/pages/profile/profile_page.dart';
 import 'package:asistencias_egc/pages/public/MenuLateral.dart';
 import 'package:asistencias_egc/pages/public/attendance.dart';
 import 'package:asistencias_egc/pages/attendance/attendanceV2.dart';
@@ -57,6 +58,7 @@ class _MainDrawerControllerState extends State<MainDrawerController> {
       case 'members': return const Members();
       case 'attendance_char': return const AttendanceChar();
       case 'participation_history': return const ParticipationHistory();
+      case 'profile_page': return const ProfilePage();
       default: return const Members();
     }
   }

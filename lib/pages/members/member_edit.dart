@@ -2,8 +2,6 @@ import 'package:asistencias_egc/models/Career.dart';
 import 'package:asistencias_egc/models/Establishment.dart';
 import 'package:asistencias_egc/models/escuadras.dart';
 import 'package:asistencias_egc/models/integrantes.dart';
-import 'package:asistencias_egc/models/login/LoginResponse.dart';
-import 'package:asistencias_egc/provider/AuthProvider.dart';
 import 'package:asistencias_egc/utils/api/Degrees.dart';
 import 'package:asistencias_egc/utils/api/Position.dart';
 import 'package:asistencias_egc/utils/api/general_methods_controllers.dart';
@@ -11,7 +9,6 @@ import 'package:asistencias_egc/utils/api/members_controller.dart';
 import 'package:asistencias_egc/widgets/CustomTextField.dart';
 import 'package:asistencias_egc/widgets/LoadingAnimation.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
 class MemberEdit extends StatefulWidget {
   const MemberEdit({super.key});
@@ -149,8 +146,6 @@ class _MemberEditState extends State<MemberEdit> {
 
     if (!_initialized) {
       final args = ModalRoute.of(context)!.settings.arguments;
-      var authProvider = Provider.of<AuthProvider>(context);
-      LoginResponse member = authProvider.user!;
 
       if (args is Integrantes) {
         memberId = args.intIdIntegrante;
@@ -177,7 +172,7 @@ class _MemberEditState extends State<MemberEdit> {
         tipoLinea = args.tipoLinea;
         encargadoLinea = args.encargadoLinea;
         memberCategorySelected = args.categoria;
-        memberUsername = args.intpuIdPuesto == 8 ? "" : member.username;
+        memberUsername = args.intpuIdPuesto == 8 ? "" : args.intUsuario!;
         _initialized = true;
       }
     }
@@ -188,7 +183,6 @@ class _MemberEditState extends State<MemberEdit> {
       setState(() {
         _isLoading = true;
       });
-
       bool success = await MembersController.updateMember(
         memberId: memberId!,
         firstName: _nameController.text,
